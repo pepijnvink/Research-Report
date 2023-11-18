@@ -1,0 +1,177 @@
+---
+title: "Demo Taylor and Francis template"
+format:
+  tandf-pdf:
+    keep-tex: true  
+  tandf-html: default
+author:
+  - name: Pepijn Vink
+    affiliations:
+      - ref: UU
+    orcid: 0000-0001-6960-9904
+    email: p.a.vink@uu.nl
+affiliations:
+  - id: UU
+    name: Utrecht University
+    department: Methodology and Statistics for the Behavioral, Biomedical, and Social Sciences
+abstract: |
+  This document is only a demo explaining how to use the template.
+keywords: 
+  - template
+  - demo
+bibliography: bibliography.bib  
+---
+
+# Introduction
+
+
+# Methods
+
+## Causal Models
+For all simulations, the following data generating mechanism will be simulated:
+
+$$
+\textbf{X}_t = \boldsymbol{\Phi}\textbf{X}_{t-1} + \textbf{B}_{ct}\textbf{C}^T + \textbf{1}\textbf{u}_t + \textbf{E}_t
+$$ {#eq-matrix-t}
+
+$$
+\textbf{X}_1 = \textbf{B}_{c1}\textbf{C}^T + \textbf{1}\textbf{u}_1 + \textbf{E}_1
+$$
+
+$$
+\begin{bmatrix}
+x_{it}\\
+y_{it}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\phi_{xx} & \phi_{xy}\\
+\phi_{yx} & \phi_{yy}
+\end{bmatrix}
+\begin{bmatrix}
+x_{i,t-1}\\
+y_{i,t-1}
+\end{bmatrix}
++
+\begin{bmatrix}
+\beta_{xc_1t} & \beta_{xc_2t}\\
+\beta_{yc_1t} & \beta_{yc_2t}
+\end{bmatrix}
+\begin{bmatrix}
+C_{1i}\\
+C_{2i}
+\end{bmatrix} +
+U_{it} +
+\begin{bmatrix}
+\epsilon_{xit}\\
+\epsilon_{yit}
+\end{bmatrix}
+$$ {#eq-formula-t}
+
+For $t = 2, ..., T$ and
+
+$$
+\begin{bmatrix}
+x_{i1}\\
+y_{i1}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\beta_{xc_11} & \beta_{xc_21}\\
+\beta_{yc_11} & \beta_{yc_21}
+\end{bmatrix}
+\begin{bmatrix}
+C_{1i}\\
+C_{2i}
+\end{bmatrix} +
+U_{i1} +
+\begin{bmatrix}
+\epsilon_{xi1}\\
+\epsilon_{yi1}
+\end{bmatrix}
+$$
+
+$$
+\begin{bmatrix}
+\epsilon_{xit}\\
+\epsilon_{yit}
+\end{bmatrix}
+\sim
+\mathcal{N} \left(\begin{bmatrix} 0\\ 0 \end{bmatrix}, \begin{bmatrix} \psi_x & 0\\ 0 & \psi_y \end{bmatrix} \right)
+$$
+
+$$
+\begin{bmatrix}
+C_{1i}\\
+C_{2i}
+\end{bmatrix} \sim \mathcal{N}\left(\begin{bmatrix} 0\\0 \end{bmatrix}, \begin{bmatrix}\psi_{C_1} & 0 \\0 & \psi_{C_2} \end{bmatrix} \right)
+$$
+
+$$
+U_{it} \sim \mathcal{N}\left(0, \psi_u\right)
+$$
+
+For $i = 1,...,N$.
+
+This SCM is similar to the DPM as it does not have an explicit decomposition of within and between effects and it is thus an observation based model, rather than a residual based model. One way that it differs from the DPM, other than having an observed confounder instead of a latent factor, is that the DPM includes covariances between the residuals at each timepoint. Because our model is specified as a DAG, two-headed arrows are not included, and this is thus expressed as a latent confounder between the residuals at each timepoint. It can be shown that when these the effect of these confounders on the residuals are 1, this specification using a confounder $u_t$ with $\sigma_{u_t}^2 = \psi_u$ is equivalent to specifying a covariance between the residuals where $\sigma_{x_ty_t} = \psi_u$. Furthermore, the variance of the residuals at each timepoint, $\psi_x$ and $\psi_y$ are equal to the residual variances in the DPM, minus the variance of the unique factor $u_t$ at that timepoint. The SCMs that will be simulated are described below.
+
+### One confounder, time-invariant effects. (Model 1)
+When there is only one confounder C, @eq-matrix-t reduces to:
+
+$$
+\textbf{X}_t = \boldsymbol{\Phi}\textbf{X}_{t-1} + \beta_{ct}\textbf{c}^T + \textbf{1}\textbf{u}_t + \textbf{E}_t
+$$
+
+@eq-formula-t reduces to:
+
+$$
+\begin{bmatrix}
+x_{it}\\
+y_{it}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\phi_{xx} & \phi_{xy}\\
+\phi_{yx} & \phi_{yy}
+\end{bmatrix}
+\begin{bmatrix}
+x_{i,t-1}\\
+y_{i,t-1}
+\end{bmatrix}
++
+\begin{bmatrix}
+\beta_{xct}\\
+\beta_{yct}
+\end{bmatrix}
+C_{i} +
+U_{it} +
+\begin{bmatrix}
+\epsilon_{xit}\\
+\epsilon_{yit}
+\end{bmatrix}
+$$
+
+The following choices were made for the parameters for the simulation:
+$\boldsymbol{\Phi} = \begin{bmatrix}
+\phi_{xx} & \phi_{xy}\\
+\phi_{yx} & \phi_{yy}
+\end{bmatrix} = \begin{bmatrix}
+0.1 & 0.15\\
+0.1 & 0.6
+\end{bmatrix}$, $\beta_{ct} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}$, $\psi_u = 0.6$, $\psi_x = \psi_y = 1 - \psi_u = 0.4$, and $\psi_C = 5$.
+
+I will simulate 1000 datasets according to this model, each with T = 50, and N = 500. The First 45 timepoints will then be discarded, as these are used to ensure convergence towards the trend. The last 5 timepoints will be kept and analyzed. Each dataset will be analyzed both using a version of the RI-CLPM with only 1 latent factor, instead of two random intercepts (this is statistically equivalent to setting the correlation between the random intercepts to 1), and a version of the DPM with only one factor loading. Estimates of the cross-lagged parameters will be obtained and evaluated.
+
+### One confounder, time-invariant effect for x, time-varying effect for y
+
+
+# Results
+
+# Discussion
+
+{{< pagebreak >}}
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
