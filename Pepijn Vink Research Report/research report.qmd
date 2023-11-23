@@ -24,6 +24,9 @@ keywords:
   - ipsum
 bibliography: Masterscriptie.bib
 csl: apa.csl
+header-includes:
+  - \usepackage{tikz}
+  - \usetikzlibrary{positioning}
 ---
 ::: {.hidden}
 ```{=latex}
@@ -242,6 +245,18 @@ For all models, at all iterations, the cross-lagged effect of $x_4$ on $y_5$ wil
 
 # Results
 *Maybe do model 1, result 1, model 2, result 2, model 3, result 3 instead (instead of Models, Results)*
+
+# Models
+
+::: {#fig-models layout-ncol=2}
+
+![Dynamic Panel Model](dpm.tex){height=100%}
+
+![RI-CLPM](riclpm.tex){height=100%}
+
+Models
+
+:::
 
 # Discussion
 
