@@ -100,7 +100,10 @@
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 \usepackage{orcidlink}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
 \makeatletter
+\@ifpackageloaded{tikz}{}{\usepackage{tikz}}
 \makeatother
 \makeatletter
 \makeatother
@@ -160,9 +163,9 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
-  pdftitle={Demo Taylor and Francis template},
-  pdfauthor={Pepijn Vink},
-  pdfkeywords={template, demo},
+  pdftitle={Research Report},
+  pdfauthor={Pepijn Vink (6100252)},
+  pdfkeywords={lorem, ipsum},
   colorlinks=true,
   linkcolor={blue},
   filecolor={Maroon},
@@ -170,29 +173,135 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
-\title{Demo Taylor and Francis template}
-\author{Pepijn
-Vink$\textsuperscript{1}$~\orcidlink{0000-0001-6960-9904}}
+\title{Research Report}
+\author{Pepijn Vink
+(6100252)$\textsuperscript{1}$~\orcidlink{0000-0001-6960-9904}}
 
-\thanks{CONTACT: Pepijn
-Vink. Email: \href{mailto:p.a.vink@uu.nl}{\nolinkurl{p.a.vink@uu.nl}}. }
+\thanks{CONTACT: Pepijn Vink
+(6100252). Email: \href{mailto:p.a.vink@uu.nl}{\nolinkurl{p.a.vink@uu.nl}}. }
 \begin{document}
 \captionsetup{labelsep=space}
 \maketitle
 \textsuperscript{1} Methodology and Statistics for the Behavioral,
 Biomedical, and Social Sciences, Utrecht University,  
 \begin{abstract}
-This document is only a demo explaining how to use the template.
+Lorem Ipsum\ldots{}
 \end{abstract}
 \begin{keywords}
 \def\sep{;\ }
-template\sep 
-demo
+lorem\sep 
+ipsum
 \end{keywords}
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[sharp corners, interior hidden, borderline west={3pt}{0pt}{shadecolor}, boxrule=0pt, breakable, frame hidden, enhanced]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, enhanced, frame hidden, boxrule=0pt, interior hidden, sharp corners, borderline west={3pt}{0pt}{shadecolor}]}{\end{tcolorbox}}\fi
+
+\newcommand{\indep}{\perp \!\!\! \perp}
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
+
+\hypertarget{causal-models-and-backdoor-paths}{%
+\subsection{Causal Models and Backdoor
+Paths}\label{causal-models-and-backdoor-paths}}
+
+\emph{Include: Introduction to types of DAG structures, backdoor paths,
+and terminology}
+
+\hypertarget{confounding-in-cross-lagged-panel-models}{%
+\subsection{Confounding in Cross-Lagged Panel
+Models}\label{confounding-in-cross-lagged-panel-models}}
+
+\emph{Include: Introduce an example SCM (and possibly the CLPM)}
+
+When taking the effect of \(x_4\) on \(x_5\) as an example, confounding
+of this effect happens through several paths. First, there are paths
+through the \(x_t\) variables and \(y_t\) variables. An example is the
+\(x_4 \leftarrow y_3 \rightarrow y_4 \rightarrow y_5\) path, but also
+\(x_4 \leftarrow x_3 \rightarrow y_4 \rightarrow y_5\) and other paths
+that go back more. Secondly, there is confounding due to the
+time-specific confounders \(U_{it}\). The \(x_4 \rightarrow y_5\) effect
+would then be confounded by the
+\(x_4 \leftarrow U_4 \rightarrow y_4 \rightarrow y_5\) path (and no
+other paths). Lastly, there is confounding through the time-invariant
+confounders \(C\). Confounding on the \(x_4 \rightarrow y_5\) path
+would, for example be a \(x_4 \leftarrow C_1 \rightarrow y_5\) path, but
+also a \(x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_5\) and a
+\(x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_4 \rightarrow y_5\)
+path as well as many more. These types of confounding would result in
+biased estimates if the coefficient of regressing \(y_5\) on only
+\(x_4\) were used as an estimate.
+
+The first type of confounding, confounding through previous instances of
+\(x\) and \(y\), can be resolved by controlling for these previous
+instances in the regression equation. This is what the classic
+cross-lagged panel model does. This also resolves some of the
+confounding by \(C\) that runs through previous timepoints of \(x\) and
+\(y\), so that the \(x_4 \rightarrow y_5\) path is only confounded by
+\(x_4 \leftarrow C \rightarrow y_5\) paths. The second type of
+confounding, through time-specific confounders \(U_t\), is resolved by
+allowing residuals of \(x_t\) and \(y_t\) to be correlated. The third
+type of confounding, that through time-invariant confounders \(C\), can
+sometimes be resolved through the inclusion of a latent factor, which is
+the approach that the random intercept cross-lagged panel model
+(RI-CLPM) and the dynamic panel model (DPM) take.
+
+\hypertarget{comparison-of-ri-clpm-and-dpm}{%
+\subsection{Comparison of RI-CLPM and
+DPM}\label{comparison-of-ri-clpm-and-dpm}}
+
+\emph{i.e.~residual based and observed based. conceptual
+interpretations}
+
+\hypertarget{ri-clpm-and-dpm-as-data-generating-mechanisms}{%
+\subsection{RI-CLPM and DPM as Data Generating
+Mechanisms}\label{ri-clpm-and-dpm-as-data-generating-mechanisms}}
+
+Although the RI-CLPM and the DPM have some similarities when it comes to
+analyses, when interpreting them as causal models each of them has
+different implications regarding the data generating mechanism.
+
+The RI-CLPM implies that a person's deviation from their mean at \(t-1\)
+has a causal effect on their deviation from their mean at timepoint
+\(t\). It implies that the trait-like factor for a time varying variable
+\(x\) is only related to the vector of a time varying variable \(y\)
+through the covariance with its random intercept. This can reflect, for
+example, between person differences in the tendency to give high
+responses. It may thus represent a type of measurement error that is
+systematic within a person, but random between persons.
+
+The DPM implies that observed scores at timepoint \(t-1\) have a direct
+causal effect on observed scores at timepoint \(t\). Furthermore, in the
+DPM, the latent factor for \(x\) is allowed to have an effect on
+observed scores for \(y\) through the observed scores on \(x\) (and in
+part through observed scores in earlier lags of \(y\)), rather than only
+through its covariance with the latent factor for \(y\).
+
+\hypertarget{confounding-in-the-ri-clpm-and-dpm}{%
+\subsection{Confounding in the RI-CLPM and
+DPM}\label{confounding-in-the-ri-clpm-and-dpm}}
+
+It is known that both the RI-CLPM and the DPM, in specific cases,
+control for unobserved time-invariant confounders. Usami et al. (2019),
+for example, show that when the effects of the confounders are stable
+over time, as well as the lagged effects, the confounder does not affect
+the estimated of the lagged effects when using the RI-CLPM. The latent
+factor in the DPM, however, also controls for time-invariant confounders
+with time-invariant effects when lagged effects are not constant over
+time (Murayama \& Gfrörer, 2022). Furthermore, estimates will still be
+biased when the effects of the confounders are unstable over time.
+
+Therefore, the simplest forms of both the RI-CLPM and the DPM will not
+yield unbiased estimates of the causal effects if there are unobserved
+time-invariant confounders with time-varying effects. The thesis will
+explore ways to address these types of confounding in the RI-CLPM using
+causal inference techniques such as propensity score weighting (Brown et
+al., 2021; e.g. Vansteelandt \& Daniel, 2014). However, before this
+question is answered, the extent to which unobserved time-invariant
+confounders affect the estimates of the RI-CLPM and the DPM should be
+evaluated. Thus, this research report will explore different types of
+time-invariant confounders in panel data (i.e.~with time-stable effects
+versus time-varying effects) and assess their effects on estimates of
+the RI-CLPM and DPM as well as modified versions of these models with
+freed factor loadings.
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
@@ -203,19 +312,24 @@ demo
 For all simulations, the following data generating mechanism will be
 simulated:
 
-\begin{equation}\protect\hypertarget{eq-matrix-t}{}{
-\textbf{X}_t = \boldsymbol{\Phi}\textbf{X}_{t-1} + \textbf{B}_{ct}\textbf{C}^T + \textbf{1}\textbf{u}_t + \textbf{E}_t
-}\label{eq-matrix-t}\end{equation}
-
-\[
-\textbf{X}_1 = \textbf{B}_{c1}\textbf{C}^T + \textbf{1}\textbf{u}_1 + \textbf{E}_1
-\]
-
 \begin{equation}\protect\hypertarget{eq-formula-t}{}{
+\begin{split}
 \begin{bmatrix}
 x_{it}\\
 y_{it}
 \end{bmatrix}
+&
+=
+\boldsymbol{\Phi}\begin{bmatrix}x_{i,t-1}\\y_{i,t-1}\end{bmatrix} + \textbf{B}_{ct}\begin{bmatrix}
+C_{1i}\\
+C_{2i}
+\end{bmatrix} +
+U_{it} +
+\begin{bmatrix}
+\epsilon_{xit}\\
+\epsilon_{yit}
+\end{bmatrix}\\
+&
 =
 \begin{bmatrix}
 \phi_{xx} & \phi_{xy}\\
@@ -239,9 +353,10 @@ U_{it} +
 \epsilon_{xit}\\
 \epsilon_{yit}
 \end{bmatrix}
+\end{split}
 }\label{eq-formula-t}\end{equation}
 
-For \(t = 2, ..., T\) and
+for \(t = 2, ..., T\) and
 
 \[
 \begin{bmatrix}
@@ -261,8 +376,20 @@ U_{i1} +
 \begin{bmatrix}
 \epsilon_{xi1}\\
 \epsilon_{yi1}
-\end{bmatrix}
+\end{bmatrix}.
 \]
+
+Here, for person \(i\) at timepoint \(t\),
+\(\begin{bmatrix} x_{it} & y_{it}\end{bmatrix}^T\) is the data vector,
+\(\boldsymbol{\Phi}\) is the matrix of lagged effects,
+\(\textbf{B}_{ct}\) is the matrix of effects of the time-invariant
+confounders, \(\begin{bmatrix} C_{1i} & C_{2i}\end{bmatrix}^T\) is the
+vector of confounder values, \(U_{it}\) is the value of the
+time-specific confounder, and
+\(\begin{bmatrix}\epsilon_{xit} & \epsilon_{yit}\end{bmatrix}^T\) is the
+vector of residuals.
+
+In addition,
 
 \[
 \begin{bmatrix}
@@ -270,21 +397,21 @@ U_{i1} +
 \epsilon_{yit}
 \end{bmatrix}
 \sim
-\mathcal{N} \left(\begin{bmatrix} 0\\ 0 \end{bmatrix}, \begin{bmatrix} \psi_x & 0\\ 0 & \psi_y \end{bmatrix} \right)
+\mathcal{N} \left(\begin{bmatrix} 0\\ 0 \end{bmatrix}, \begin{bmatrix} \psi_x & 0\\ 0 & \psi_y \end{bmatrix} \right),
 \]
 
 \[
 \begin{bmatrix}
 C_{1i}\\
 C_{2i}
-\end{bmatrix} \sim \mathcal{N}\left(\begin{bmatrix} 0\\0 \end{bmatrix}, \begin{bmatrix}\psi_{C_1} & 0 \\0 & \psi_{C_2} \end{bmatrix} \right)
+\end{bmatrix} \sim \mathcal{N}\left(\begin{bmatrix} 0\\0 \end{bmatrix}, \begin{bmatrix}\psi_{C_1} & 0 \\0 & \psi_{C_2} \end{bmatrix} \right),
 \]
 
 \[
-U_{it} \sim \mathcal{N}\left(0, \psi_u\right)
+U_{it} \sim \mathcal{N}\left(0, \psi_u\right),
 \]
 
-For \(i = 1,...,N\).
+for \(i = 1,..., N\).
 
 This SCM is similar to the DPM as it does not have an explicit
 decomposition of within and between effects and it is thus an
@@ -300,21 +427,16 @@ are 1, this specification using a confounder \(u_t\) with
 between the residuals where \(\sigma_{x_ty_t} = \psi_u\). Furthermore,
 the variance of the residuals at each timepoint, \(\psi_x\) and
 \(\psi_y\) are equal to the residual variances in the DPM, minus the
-variance of the unique factor \(u_t\) at that timepoint. The SCMs that
-will be simulated are described below.
+variance of the unique factor \(u_t\) at that timepoint.
 
-\hypertarget{one-confounder-time-invariant-effects.-model-1}{%
-\subsubsection{One confounder, time-invariant effects. (Model
-1)}\label{one-confounder-time-invariant-effects.-model-1}}
+The specific SCMs that will be simulated are described below.
 
-When there is only one confounder C, Equation~\ref{eq-matrix-t} reduces
-to:
+\hypertarget{one-confounder-time-stable-effects.-model-1}{%
+\subsubsection{One confounder, time-stable effects. (Model
+1)}\label{one-confounder-time-stable-effects.-model-1}}
 
-\[
-\textbf{X}_t = \boldsymbol{\Phi}\textbf{X}_{t-1} + \beta_{ct}\textbf{c}^T + \textbf{1}\textbf{u}_t + \textbf{E}_t
-\]
-
-Equation~\ref{eq-formula-t} reduces to:
+When there is only one confounder C, and its effects are invariant over
+time, Equation~\ref{eq-formula-t} reduces to:
 
 \[
 \begin{bmatrix}
@@ -332,25 +454,111 @@ y_{i,t-1}
 \end{bmatrix}
 +
 \begin{bmatrix}
-\beta_{xct}\\
-\beta_{yct}
+\beta_{xc}\\
+\beta_{yc}
 \end{bmatrix}
 C_{i} +
 U_{it} +
 \begin{bmatrix}
 \epsilon_{xit}\\
 \epsilon_{yit}
-\end{bmatrix}
+\end{bmatrix}.
 \]
 
 The following choices were made for the parameters for the simulation:
-\(\boldsymbol{\Phi} = \begin{bmatrix} \phi_{xx} & \phi_{xy}\\ \phi_{yx} & \phi_{yy} \end{bmatrix} = \begin{bmatrix} 0.1 & 0.15\\ 0.1 & 0.6 \end{bmatrix}\),
-\(\beta_{ct} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}\),
-\(\psi_u = 0.6\), \(\psi_x = \psi_y = 1 - \psi_u = 0.4\), and
-\(psi_C = 5\).
+\(\boldsymbol{\Phi} = \begin{bmatrix} \phi_{xx} & \phi_{xy}\\ \phi_{yx} & \phi_{yy} \end{bmatrix} = \begin{bmatrix} 0.2 & 0.15\\ 0.1 & 0.3 \end{bmatrix}\),
+\(\beta_{c} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}\),
+\(\psi_u = 0.3\), \(\psi_x = \psi_y = 1 - \psi_u = 0.4\), and
+\(\psi_C = 5\).
+
+\hypertarget{one-confounder-time-stable-effect-for-x-time-varying-effect-for-y-model-2}{%
+\subsubsection{\texorpdfstring{One confounder, time-stable effect for
+\(x\), time-varying effect for \(y\) (Model
+2)}{One confounder, time-stable effect for x, time-varying effect for y (Model 2)}}\label{one-confounder-time-stable-effect-for-x-time-varying-effect-for-y-model-2}}
+
+The following choices were made for the parameters for the simulation:
+\(\boldsymbol{\Phi} = \begin{bmatrix} \phi_{xx} & \phi_{xy}\\ \phi_{yx} & \phi_{yy} \end{bmatrix} = \begin{bmatrix} 0.2 & 0.15\\ 0.1 & 0.3 \end{bmatrix}\),
+\(\beta_{ct} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}\) for
+\(t \le 47\), \(\beta_{ct} = \begin{bmatrix} 0.10\\0.20 \end{bmatrix}\)
+for \(t \ge 48\), \(\psi_u = 0.3\),
+\(\psi_x = \psi_y = 1 - \psi_u = 0.4\), and \(\psi_C = 5\). Thus, until
+\(t = 48\), this model is equivalent to the previous one. However, at
+\(t = 48\), the effect of \(C\) on \(y\) increases (and afterwards
+remains stable).
+
+\hypertarget{two-confounders.-time-stable-effects-on-x-time-varying-effects-on-y.-model-3}{%
+\subsubsection{\texorpdfstring{Two confounders. Time-stable effects on
+\(x\), time-varying effects on \(y\). (Model
+3)}{Two confounders. Time-stable effects on x, time-varying effects on y. (Model 3)}}\label{two-confounders.-time-stable-effects-on-x-time-varying-effects-on-y.-model-3}}
+
+\emph{Include: At \(t \le 47\),
+\(\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.12 & 0.15 \end{bmatrix}\).
+At \(t \ge 48\),
+\(\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.15 & 0.12 \end{bmatrix}.\)}
+
+\emph{Mogelijk verschillende sample momenten vergelijken. Dus wat als
+het bij \(t = 1\) verandert, wat als bij \(t=3\) en wat als bij \(t=5\)}
+
+\hypertarget{model-evaluation}{%
+\subsection{Model Evaluation}\label{model-evaluation}}
+
+I will simulate 1000 datasets according to each SCM, each with T = 50,
+and N = 500. The first 45 timepoints will then be discarded, as these
+are used to ensure convergence towards a trend. The last 5 timepoints
+will be kept and analyzed.
+
+Model 1 and Model 2 will be analyzed using a version of the RI-CLPM and
+the DPM with only one factor. In addition to this, Model 2 will also be
+analyzed using an alternative of the RI-CLPM with free factor loadings.
+This is not necessary for the DPM, as a DPM with 1 latent factor and
+free loadings is equivalent to a version of the RI-CLPM with 1 factor
+and free loadings (Lüdtke \& Robitzsch, 2021). Model 3 will be analyzed
+using the RI-CLPM and the DPM, as well as versions of these with free
+factor loadings.
+
+For all models, at all iterations, the cross-lagged effect of \(x_4\) on
+\(y_5\) will be extracted and evaluated. Specifically, the biases and
+MSEs corresponding with the analysis techniques for the different causal
+models will be reported with their corresponding Monte Carlo SEs, as
+well as the coverage rate of the 95\% confidence interval (see Morris et
+al., 2019).
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
+
+\emph{Maybe do model 1, result 1, model 2, result 2, model 3, result 3
+instead (instead of Models, Results)}
+
+\hypertarget{models}{%
+\section{Models}\label{models}}
+
+\begin{figure}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\resizebox{!}{\linewidth}{\input{dpm.tex}}
+
+}
+
+\subcaption{\label{fig-anonymous-1}Dynamic Panel Model}
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\resizebox{!}{\linewidth}{\input{riclpm.tex}}
+
+}
+
+\subcaption{\label{fig-anonymous-2}RI-CLPM}
+\end{minipage}%
+
+\caption{\label{fig-models}Models}
+
+\end{figure}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -362,7 +570,40 @@ The following choices were made for the parameters for the simulation:
 \addcontentsline{toc}{section}{References}
 
 \hypertarget{refs}{}
-\begin{CSLReferences}{0}{0}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-brown2021}{}}%
+Brown, D. W., Greene, T. J., Swartz, M. D., Wilkinson, A. V., \&
+DeSantis, S. M. (2021). Propensity score stratification methods for
+continuous treatments. \emph{Statistics in Medicine}, \emph{40}(5),
+1189--1203. \url{https://doi.org/10.1002/sim.8835}
+
+\leavevmode\vadjust pre{\hypertarget{ref-ludtke2021}{}}%
+Lüdtke, O., \& Robitzsch, A. (2021). \emph{A {Critique} of the {Random
+Intercept Cross-Lagged Panel Model}} {[}Preprint{]}. {PsyArXiv}.
+\url{https://doi.org/10.31234/osf.io/6f85c}
+
+\leavevmode\vadjust pre{\hypertarget{ref-morris2019}{}}%
+Morris, T. P., White, I. R., \& Crowther, M. J. (2019). Using simulation
+studies to evaluate statistical methods. \emph{Statistics in Medicine},
+\emph{38}(11), 2074--2102. \url{https://doi.org/10.1002/sim.8086}
+
+\leavevmode\vadjust pre{\hypertarget{ref-murayama2022}{}}%
+Murayama, K., \& Gfrörer, T. (2022). \emph{Thinking clearly about
+time-invariant confounders in cross-lagged panel models: {A} guide for
+choosing a statistical model from a causal inference perspective}
+{[}Preprint{]}. {PsyArXiv}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-usami2019}{}}%
+Usami, S., Murayama, K., \& Hamaker, E. L. (2019). A unified framework
+of longitudinal models to examine reciprocal relations.
+\emph{Psychological Methods}, \emph{24}(5), 637--657.
+\url{https://doi.org/10.1037/met0000210}
+
+\leavevmode\vadjust pre{\hypertarget{ref-vansteelandt2014}{}}%
+Vansteelandt, S., \& Daniel, R. m. (2014). On regression adjustment for
+the propensity score. \emph{Statistics in Medicine}, \emph{33}(23),
+4053--4072. \url{https://doi.org/10.1002/sim.6207}
+
 \end{CSLReferences}
 
 
