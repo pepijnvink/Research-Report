@@ -1,0 +1,566 @@
+---
+title: "Tikz Models"
+author: "Pepijn Vink"
+format: pdf
+header-includes:
+  - \usepackage{tikz}
+  - \usetikzlibrary{positioning}
+  - \usetikzlibrary{arrows}
+---
+# DGM Boxes 2C
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+latent/.style={circle,draw,very thick,inner sep=0pt,minimum size=8mm,align=center},
+manifest/.style={rectangle,draw,very thick,inner sep=0pt,minimum width=8mm,minimum height=8mm, anchor=center},
+dotbox/.style={rectangle,draw,dashed,inner sep=0pt,minimum width=8mm,minimum height=8mm, anchor=center},
+resid/.style={circle,draw,very thick,inner sep=0pt,minimum size=7mm,align=center},
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+dashpath/.style={dashed, ->, -latex},
+double/.style={very thick, latex-latex}
+]
+%create nodes
+\node[dotbox] (y1) at (0,0) {$Y_1$};
+\node[dotbox, right = 1.5cm of y1] (yt) {$Y_t$};
+\node[manifest, right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[manifest, right=1.5cm of y2] (y3){$Y_{47}$};
+\node[manifest, right=1.5cm of y3] (y4){$Y_{48}$};
+\node[manifest, right=1.5cm of y4] (y5){$Y_{49}$};
+\node[manifest, right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[dotbox, above=1.5cm of u1] (x1){$X_1$};
+\node[dotbox, above=1.5cm of ut] (xt){$X_t$};
+\node[manifest, above=1.5cm of u2] (x2){$X_{46}$};
+\node[manifest, above=1.5cm of u3] (x3){$X_{47}$};
+\node[manifest, above=1.5cm of u4] (x4){$X_{48}$};
+\node[manifest, above=1.5cm of u5] (x5){$X_{49}$};
+\node[manifest, above=1.5cm of u6] (x6){$X_{50}$};
+
+\node[manifest, below left=0.5cm and 2cm of x1] (c1){$C_{1}$};
+\node[manifest, above left=0.5cm and 2cm of y1] (c2){$C_{2}$};
+
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c1.east) -- +(1cm,2cm);
+\draw[dot] (c1.east) -- +(1cm,1cm);
+\draw[dot] (c1.east) -- +(1cm,0cm);
+\draw[dot] (c1.east) -- +(1cm,-1cm);
+\draw[dot] (c1.east) -- +(1cm,-2cm);
+
+\draw[dot] (c2.east) -- +(1cm,2cm);
+\draw[dot] (c2.east) -- +(1cm,1cm);
+\draw[dot] (c2.east) -- +(1cm,0cm);
+\draw[dot] (c2.east) -- +(1cm,-1cm);
+\draw[dot] (c2.east) -- +(1cm,-2cm);
+
+\end{tikzpicture}
+
+# DGM No Boxes 2C
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node (y1) at (0,0) {$Y_1$};
+\node[right=1.5cm of y1] (yt) {$Y_t$};
+\node[right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[right=1.5cm of y2] (y3){$Y_{47}$};
+\node[right=1.5cm of y3] (y4){$Y_{48}$};
+\node[right=1.5cm of y4] (y5){$Y_{49}$};
+\node[right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[above=1.5cm of u1] (x1){$X_1$};
+\node[above=1.5cm of ut] (xt){$X_t$};
+\node[above=1.5cm of u2] (x2){$X_{46}$};
+\node[above=1.5cm of u3] (x3){$X_{47}$};
+\node[above=1.5cm of u4] (x4){$X_{48}$};
+\node[above=1.5cm of u5] (x5){$X_{49}$};
+\node[above=1.5cm of u6] (x6){$X_{50}$};
+
+\node[below left=0.5cm and 2cm of x1] (c1){$C_{1}$};
+\node[above left=0.5cm and 2cm of y1] (c2){$C_{2}$};
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c1.east) -- +(1cm,2cm);
+\draw[dot] (c1.east) -- +(1cm,1cm);
+\draw[dot] (c1.east) -- +(1cm,0cm);
+\draw[dot] (c1.east) -- +(1cm,-1cm);
+\draw[dot] (c1.east) -- +(1cm,-2cm);
+
+\draw[dot] (c2.east) -- +(1cm,2cm);
+\draw[dot] (c2.east) -- +(1cm,1cm);
+\draw[dot] (c2.east) -- +(1cm,0cm);
+\draw[dot] (c2.east) -- +(1cm,-1cm);
+\draw[dot] (c2.east) -- +(1cm,-2cm);
+
+\end{tikzpicture}
+
+# DGM Boxes 1C
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+latent/.style={circle,draw,very thick,inner sep=0pt,minimum size=8mm,align=center},
+manifest/.style={rectangle,draw,very thick,inner sep=0pt,minimum width=8mm,minimum height=8mm, anchor=center},
+dotbox/.style={rectangle,draw,dashed,inner sep=0pt,minimum width=8mm,minimum height=8mm, anchor=center},
+resid/.style={circle,draw,very thick,inner sep=0pt,minimum size=7mm,align=center},
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node[dotbox] (y1) at (0,0) {$Y_1$};
+\node[dotbox, right = 1.5cm of y1] (yt) {$Y_t$};
+\node[manifest, right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[manifest, right=1.5cm of y2] (y3){$Y_{47}$};
+\node[manifest, right=1.5cm of y3] (y4){$Y_{48}$};
+\node[manifest, right=1.5cm of y4] (y5){$Y_{49}$};
+\node[manifest, right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[dotbox, above=1.5cm of u1] (x1){$X_1$};
+\node[dotbox, above=1.5cm of ut] (xt){$X_t$};
+\node[manifest, above=1.5cm of u2] (x2){$X_{46}$};
+\node[manifest, above=1.5cm of u3] (x3){$X_{47}$};
+\node[manifest, above=1.5cm of u4] (x4){$X_{48}$};
+\node[manifest, above=1.5cm of u5] (x5){$X_{49}$};
+\node[manifest, above=1.5cm of u6] (x6){$X_{50}$};
+
+\node[manifest, left=2cm of u1] (c){$\textbf{C}$};
+
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c.east) -- +(1cm,2cm);
+\draw[dot] (c.east) -- +(1cm,1cm);
+\draw[dot] (c.east) -- +(1cm,0cm);
+\draw[dot] (c.east) -- +(1cm,-1cm);
+\draw[dot] (c.east) -- +(1cm,-2cm);
+
+\end{tikzpicture}
+
+# DGM No Boxes 1C
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node (y1) at (0,0) {$Y_1$};
+\node[right = 1.5cm of y1] (yt) {$Y_t$};
+\node[right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[right=1.5cm of y2] (y3){$Y_{47}$};
+\node[right=1.5cm of y3] (y4){$Y_{48}$};
+\node[right=1.5cm of y4] (y5){$Y_{49}$};
+\node[right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[above=1.5cm of u1] (x1){$X_1$};
+\node[above=1.5cm of ut] (xt){$X_t$};
+\node[above=1.5cm of u2] (x2){$X_{46}$};
+\node[above=1.5cm of u3] (x3){$X_{47}$};
+\node[above=1.5cm of u4] (x4){$X_{48}$};
+\node[above=1.5cm of u5] (x5){$X_{49}$};
+\node[above=1.5cm of u6] (x6){$X_{50}$};
+\node[left=2cm of u1] (c){$\textbf{C}$};
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c.east) -- +(1cm,2cm);
+\draw[dot] (c.east) -- +(1cm,1cm);
+\draw[dot] (c.east) -- +(1cm,0cm);
+\draw[dot] (c.east) -- +(1cm,-1cm);
+\draw[dot] (c.east) -- +(1cm,-2cm);
+
+\end{tikzpicture}
+
+# DGM No Boxes 1C All lines
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node (y1) at (0,0) {$Y_1$};
+\node[right = 1.5cm of y1] (yt) {$Y_t$};
+\node[right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[right=1.5cm of y2] (y3){$Y_{47}$};
+\node[right=1.5cm of y3] (y4){$Y_{48}$};
+\node[right=1.5cm of y4] (y5){$Y_{49}$};
+\node[right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[above=1.5cm of u1] (x1){$X_1$};
+\node[above=1.5cm of ut] (xt){$X_t$};
+\node[above=1.5cm of u2] (x2){$X_{46}$};
+\node[above=1.5cm of u3] (x3){$X_{47}$};
+\node[above=1.5cm of u4] (x4){$X_{48}$};
+\node[above=1.5cm of u5] (x5){$X_{49}$};
+\node[above=1.5cm of u6] (x6){$X_{50}$};
+\node[left=2cm of u1] (c){$\textbf{C}$};
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c.45) -- (x1.south);
+\draw[dot] (c.45) -- (xt.south);
+\draw[dot] (c.45) -- (x2.south);
+\draw[dot] (c.45) -- (x3.south);
+\draw[dot] (c.45) -- (x4.south);
+\draw[dot] (c.45) -- (x5.south);
+\draw[dot] (c.45) -- (x6.south);
+
+\draw[dot] (c.-45) -- (y1.north);
+\draw[dot] (c.-45) -- (yt.north);
+\draw[dot] (c.-45) -- (y2.north);
+\draw[dot] (c.-45) -- (y3.north);
+\draw[dot] (c.-45) -- (y4.north);
+\draw[dot] (c.-45) -- (y5.north);
+\draw[dot] (c.-45) -- (y6.north);
+
+\end{tikzpicture}
+
+# DGM No Boxes 1C All lines 2
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node (y1) at (0,0) {$Y_1$};
+\node[right = 1.5cm of y1] (yt) {$Y_t$};
+\node[right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[right=1.5cm of y2] (y3){$Y_{47}$};
+\node[right=1.5cm of y3] (y4){$Y_{48}$};
+\node[right=1.5cm of y4] (y5){$Y_{49}$};
+\node[right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[above=1.5cm of u1] (x1){$X_1$};
+\node[above=1.5cm of ut] (xt){$X_t$};
+\node[above=1.5cm of u2] (x2){$X_{46}$};
+\node[above=1.5cm of u3] (x3){$X_{47}$};
+\node[above=1.5cm of u4] (x4){$X_{48}$};
+\node[above=1.5cm of u5] (x5){$X_{49}$};
+\node[above=1.5cm of u6] (x6){$X_{50}$};
+\node[left=2cm of u1] (c){$\textbf{C}$};
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dashpath] (c.north) to[out = 90, in=90, looseness=1] (x1.north);
+\draw[dashpath] (c.north) to[out = 90, in=90, looseness=1] (xt.north);
+\draw[paths] (c.north) to[out = 90, in=90, looseness=1] (x2.north);
+\draw[paths] (c.north) to[out = 90, in=90, looseness=1] (x3.north);
+\draw[paths] (c.north) to[out = 90, in=90, looseness=1] (x4.north);
+\draw[paths] (c.north) to[out = 90, in=90, looseness=1] (x5.north);
+\draw[paths] (c.north) to[out = 90, in=90, looseness=1] (x6.north);
+
+\draw[dashpath] (c.south) to[out = -90, in=-90, looseness=1] (y1.south);
+\draw[dashpath] (c.south) to[out = -90, in=-90, looseness=1] (yt.south);
+\draw[paths] (c.south) to[out = -90, in=-90, looseness=1] (y2.south);
+\draw[paths] (c.south) to[out = -90, in=-90, looseness=1] (y3.south);
+\draw[paths] (c.south) to[out = -90, in=-90, looseness=1] (y4.south);
+\draw[paths] (c.south) to[out = -90, in=-90, looseness=1] (y5.south);
+\draw[paths] (c.south) to[out = -90, in=-90, looseness=1] (y6.south);
+
+\end{tikzpicture}
+
+# DGM No Boxes 2C All lines
+\begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
+paths/.style={->, very thick, -latex},
+dot/.style={dotted, ->, -latex},
+double/.style={very thick, latex-latex},
+dashpath/.style={dashed, ->, -latex}
+]
+%create nodes
+\node (y1) at (0,0) {$Y_1$};
+\node[right=1.5cm of y1] (yt) {$Y_t$};
+\node[right=1.5cm of yt] (y2) {$Y_{46}$};
+\node[right=1.5cm of y2] (y3){$Y_{47}$};
+\node[right=1.5cm of y3] (y4){$Y_{48}$};
+\node[right=1.5cm of y4] (y5){$Y_{49}$};
+\node[right=1.5cm of y5] (y6){$Y_{50}$};
+
+\node[above=1.5cm of y1] (u1){};
+\node[above=1.5cm of yt] (ut){};
+\node[above=1.5cm of y2] (u2){};
+\node[above=1.5cm of y3] (u3){};
+\node[above=1.5cm of y4] (u4){};
+\node[above=1.5cm of y5] (u5){};
+\node[above=1.5cm of y6] (u6){};
+
+\node[above=1.5cm of u1] (x1){$X_1$};
+\node[above=1.5cm of ut] (xt){$X_t$};
+\node[above=1.5cm of u2] (x2){$X_{46}$};
+\node[above=1.5cm of u3] (x3){$X_{47}$};
+\node[above=1.5cm of u4] (x4){$X_{48}$};
+\node[above=1.5cm of u5] (x5){$X_{49}$};
+\node[above=1.5cm of u6] (x6){$X_{50}$};
+
+\node[below left=0.5cm and 2cm of x1] (c1){$C_{1}$};
+\node[above left=0.5cm and 2cm of y1] (c2){$C_{2}$};
+
+%draw paths
+\draw[dashpath] (x1.south east) -- (yt.north west);
+\draw[dashpath] (y1.north east) -- (xt.south west);
+\draw[dashpath] (xt.south east) -- (y2.north west);
+\draw[dashpath] (yt.north east) -- (x2.south west);
+
+\draw[paths] (x2.south east) -- (y3.north west);
+\draw[paths] (x3.south east) -- (y4.north west);
+\draw[paths] (x4.south east) -- (y5.north west);
+\draw[paths] (x5.south east) -- (y6.north west);
+\draw[paths] (y2.north east) -- (x3.south west);
+\draw[paths] (y3.north east) -- (x4.south west);
+\draw[paths] (y4.north east) -- (x5.south west);
+\draw[paths] (y5.north east) -- (x6.south west);
+
+\draw[dashpath] (x1.east) -- (xt.west);
+\draw[dashpath] (xt.east) -- (x2.west);
+\draw[paths] (x2.east) -- (x3.west);
+\draw[paths] (x3.east) -- (x4.west);
+\draw[paths] (x4.east) -- (x5.west);
+\draw[paths] (x5.east) -- (x6.west);
+\draw[dashpath] (y1.east) -- (yt.west);
+\draw[dashpath] (yt.east) -- (y2.west);
+\draw[paths] (y2.east) -- (y3.west);
+\draw[paths] (y3.east) -- (y4.west);
+\draw[paths] (y4.east) -- (y5.west);
+\draw[paths] (y5.east) -- (y6.west);
+
+\draw[dot] (c1.east) -- (x1.south);
+\draw[dot] (c1.east) -- (xt.south);
+\draw[dot] (c1.east) -- (x2.south);
+\draw[dot] (c1.east) -- (x3.south);
+\draw[dot] (c1.east) -- (x4.south);
+\draw[dot] (c1.east) -- (x5.south);
+\draw[dot] (c1.east) -- (x6.south);
+
+\draw[dot] (c1.east) -- (y1.north);
+\draw[dot] (c1.east) -- (yt.north);
+\draw[dot] (c1.east) -- (y2.north);
+\draw[dot] (c1.east) -- (y3.north);
+\draw[dot] (c1.east) -- (y4.north);
+\draw[dot] (c1.east) -- (y5.north);
+\draw[dot] (c1.east) -- (y6.north);
+
+\draw[dot] (c2.east) -- (x1.south);
+\draw[dot] (c2.east) -- (xt.south);
+\draw[dot] (c2.east) -- (x2.south);
+\draw[dot] (c2.east) -- (x3.south);
+\draw[dot] (c2.east) -- (x4.south);
+\draw[dot] (c2.east) -- (x5.south);
+\draw[dot] (c2.east) -- (x6.south);
+
+\draw[dot] (c2.east) -- (y1.north);
+\draw[dot] (c2.east) -- (yt.north);
+\draw[dot] (c2.east) -- (y2.north);
+\draw[dot] (c2.east) -- (y3.north);
+\draw[dot] (c2.east) -- (y4.north);
+\draw[dot] (c2.east) -- (y5.north);
+\draw[dot] (c2.east) -- (y6.north);
+
+\end{tikzpicture}

@@ -1,7 +1,6 @@
-\usetikzlibrary{positioning}
 \begin{tikzpicture}[auto,node distance=.5cm, scale=0.5,
-latent/.style={circle,draw,very thick,inner sep=0pt,minimum size=10mm,align=center},
-manifest/.style={rectangle,draw,very thick,inner sep=0pt,minimum width=10mm,minimum height=10mm},
+latent/.style={circle,draw,very thick,inner sep=0pt,minimum size=8mm,align=center},
+manifest/.style={rectangle,draw,very thick,inner sep=0pt,minimum width=8mm,minimum height=8mm},
 resid/.style={circle,draw,very thick,inner sep=0pt,minimum size=7mm,align=center},
 paths/.style={->, very thick, -latex},
 double/.style={very thick, latex-latex}
@@ -29,20 +28,20 @@ double/.style={very thick, latex-latex}
 \node[resid, above=0.5cm of cy4] (ey4){$\epsilon_{Y4}$};
 \node[resid, above=0.5cm of cy5] (ey5){$\epsilon_{Y5}$};
 
-\node[manifest, above=1cm of cx1] (x1){$X_1$};
-\node[manifest, above=1cm of cx2] (x2){$X_2$};
-\node[manifest, above=1cm of cx3] (x3){$X_3$};
-\node[manifest, above=1cm of cx4] (x4){$X_4$};
-\node[manifest, above=1cm of cx5] (x5){$X_5$};
+\node[manifest, above=0.5cm of cx1] (x1){$X_1$};
+\node[manifest, above=0.5cm of cx2] (x2){$X_2$};
+\node[manifest, above=0.5cm of cx3] (x3){$X_3$};
+\node[manifest, above=0.5cm of cx4] (x4){$X_4$};
+\node[manifest, above=0.5cm of cx5] (x5){$X_5$};
 
-\node[manifest, below=1cm of cy1] (y1){$Y_1$};
-\node[manifest, below=1cm of cy2] (y2){$Y_2$};
-\node[manifest, below=1cm of cy3] (y3){$Y_3$};
-\node[manifest, below=1cm of cy4] (y4){$Y_4$};
-\node[manifest, below=1cm of cy5] (y5){$Y_5$};
+\node[manifest, below=0.5cm of cy1] (y1){$Y_1$};
+\node[manifest, below=0.5cm of cy2] (y2){$Y_2$};
+\node[manifest, below=0.5cm of cy3] (y3){$Y_3$};
+\node[manifest, below=0.5cm of cy4] (y4){$Y_4$};
+\node[manifest, below=0.5cm of cy5] (y5){$Y_5$};
 
-\node[latent, above=2cm of x3] (etax){$RI_X$};
-\node[latent, below=2cm of y3] (etay){$RI_Y$};
+\node[latent, above=1cm of x3] (etax){$RI_X$};
+\node[latent, below=1cm of y3] (etay){$RI_Y$};
 
 %observed to within paths
 \draw[paths] (cx1) -- (x1);
@@ -127,6 +126,6 @@ double/.style={very thick, latex-latex}
 \draw[double] (cy1.south west) arc [start angle=45, end angle = 405, x radius = 0.3cm, y radius=0.3cm];
 
 %covariance between latent factors
-\draw[double] (etax.east) to [out=0, in=0, looseness=2] (etay.east);
+\draw[double] (etax.east) to [out=0, in=0, looseness=3] (etay.east);
 
 \end{tikzpicture}

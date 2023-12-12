@@ -1,0 +1,48 @@
+# create factor
+Fx =~ x1 + a*x2 + a*x3 + a*x4 + a*x5
+Fy =~ y1 + b*y2 + b*y3 + b*y4 + b*y5
+
+# estimate (cross) lagged effect
+x2 + y2 ~ x1 + y1
+x3 + y3 ~ x2 + y2
+x4 + y4 ~ x3 + y3
+x5 + y5 ~ x4 + y4
+
+# residual covariances
+x1 ~~ y1
+x2 ~~ y2
+x3 ~~ y3
+x4 ~~ y4
+x5 ~~ y5
+
+# variance of factor
+Fx ~~ 1*Fx
+Fy ~~ 1*Fy
+
+# covariance of factors
+Fx ~~ Fy
+
+# estimate residual variances
+x1 ~~ x1
+x2 ~~ x2
+x3 ~~ x3
+x4 ~~ x4
+x5 ~~ x5
+y1 ~~ y1
+y2 ~~ y2
+y3 ~~ y3
+y4 ~~ y4
+y5 ~~ y5
+
+# free intercepts
+x1 ~ 1
+x2 ~ 1
+x3 ~ 1
+x4 ~ 1
+x5 ~ 1
+
+y1 ~ 1
+y2 ~ 1
+y3 ~ 1
+y4 ~ 1
+y5 ~ 1
