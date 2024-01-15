@@ -1,0 +1,39 @@
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\caption{\label{tbl-measures}Relative Bias, RMSE, and Covarage for Each Scenario on the Effect of
+\(x_4\) on \(y_5\). The True Effect is 0.1 }\tabularnewline
+
+\centering
+\begin{tabular}{llccc}
+\toprule
+Scenario & Model & Relative Bias (\%) & RMSE\textsuperscript{1} & Coverage (\%)\textsuperscript{2}\\
+\midrule
+ & RI-CLPM & -0.11 & 0.06 & 94.40\\
+
+ & DPM & 1.52 & 0.04 & 95.69\\
+
+ & RI-CLPM (free loadings) & -17.39 & 0.10 & 95.81\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 1} & DPM (free loadings) & -6.06 & 0.07 & 94.73\\
+\cmidrule{1-5}
+ & RI-CLPM & -49.81 & 0.08 & 88.94\\
+
+ & DPM & 11.83 & 0.04 & 94.52\\
+
+ & RI-CLPM (free loadings) & -50.27 & 0.11 & 97.78\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 2} & DPM (free loadings) & -21.80 & 0.09 & 95.42\\
+\cmidrule{1-5}
+ & RI-CLPM & -88.09 & 0.11 & 71.70\\
+
+ & DPM & -50.86 & 0.07 & 79.10\\
+
+ & RI-CLPM (free loadings) & -65.04 & 0.12 & 98.00\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 3} & DPM (free loadings) & -43.64 & 0.10 & 96.65\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}\textsuperscript{1} Root Mean Square Error.}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}\textsuperscript{2} Inclusion frequency of the true effect for the 95\% confidence interval.}\\
+\end{tabular}
+\end{table*}

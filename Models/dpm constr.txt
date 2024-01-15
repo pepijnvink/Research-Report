@@ -1,6 +1,11 @@
 # create factor
-Fx =~ x1 + a*x2 + a*x3 + a*x4 + a*x5
-Fy =~ y1 + b*y2 + b*y3 + b*y4 + b*y5
+Fx =~ a*x2 + a*x3 + a*x4 + a*x5
+Fy =~ b*y2 + b*y3 + b*y4 + b*y5
+
+Fx ~~ x1
+Fx ~~ y1
+Fy ~~ x1
+Fy ~~ y1
 
 # estimate (cross) lagged effect
 x2 + y2 ~ x1 + y1
