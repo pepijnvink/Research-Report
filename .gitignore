@@ -5,6 +5,7 @@
 # Session Data files
 .RData
 .RDataTmp
+.RDataTmp1
 
 # User-specific files
 .Ruserdata
@@ -48,3 +49,10 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .DS_Store
+
+# Files for latex compilation
+*.log
+*.gz
+
+# Other
+First plots try.qmd

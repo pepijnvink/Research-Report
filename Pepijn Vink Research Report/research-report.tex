@@ -4,7 +4,10 @@
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
 %
 \documentclass[
-]{interact}
+  a4paper,
+  stu,
+  floatsintext,
+  donotrepeattitle]{apa7}
 
 \usepackage{amsmath,amssymb}
 \usepackage{iftex}
@@ -39,7 +42,7 @@
 \makeatother
 \usepackage{xcolor}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{5}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
@@ -75,33 +78,32 @@
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
-\newlength{\cslhangindent}
-\setlength{\cslhangindent}{1.5em}
-\newlength{\csllabelwidth}
-\setlength{\csllabelwidth}{3em}
-\newlength{\cslentryspacingunit} % times entry-spacing
-\setlength{\cslentryspacingunit}{\parskip}
-\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
- {% don't indent paragraphs
-  \setlength{\parindent}{0pt}
-  % turn on hanging indent if param 1 is 1
-  \ifodd #1
-  \let\oldpar\par
-  \def\par{\hangindent=\cslhangindent\oldpar}
-  \fi
-  % set entry spacing
-  \setlength{\parskip}{#2\cslentryspacingunit}
- }%
- {}
-\usepackage{calc}
-\newcommand{\CSLBlock}[1]{#1\hfill\break}
-\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
-\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
-\usepackage{orcidlink}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{positioning}
+\affiliation{{Utrecht University}}
+\course{Methodology and Statistics for the Behavioral, Biomedical, and Social Sciences\\
+Research Report}
+\shorttitle{Confounding in Cross-Lagged Panel Models}
+\duedate{22 Dec 2023}
+\note{Student Number: 6100252\\
+2499 words}
+\professor{Supervisors: Ellen Hamaker, Jeroen Mulder}
+\raggedbottom
 \makeatletter
 \@ifpackageloaded{tikz}{}{\usepackage{tikz}}
 \makeatother
@@ -159,13 +161,15 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\usepackage[style=apa]{biblatex}
+\addbibresource{Masterscriptie.bib}
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
-  pdftitle={Research Report},
-  pdfauthor={Pepijn Vink (6100252)},
-  pdfkeywords={lorem, ipsum},
+  pdftitle={One Step Toward Causality: Unobserved Time-Invariant Confounding in Cross-Lagged Panel Models},
+  pdfauthor={Pepijn A. Vink},
+  pdfkeywords={RI-CLPM, DPM, causality, longitudinal, simulation, confounding},
   colorlinks=true,
   linkcolor={blue},
   filecolor={Maroon},
@@ -173,395 +177,451 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
-\title{Research Report}
-\author{Pepijn Vink
-(6100252)$\textsuperscript{1}$~\orcidlink{0000-0001-6960-9904}}
+\title{One Step Toward Causality: Unobserved Time-Invariant Confounding
+in Cross-Lagged Panel Models}
+\author{Pepijn A. Vink}
+\date{}
 
-\thanks{CONTACT: Pepijn Vink
-(6100252). Email: \href{mailto:p.a.vink@uu.nl}{\nolinkurl{p.a.vink@uu.nl}}. }
 \begin{document}
-\captionsetup{labelsep=space}
 \maketitle
-\textsuperscript{1} Methodology and Statistics for the Behavioral,
-Biomedical, and Social Sciences, Utrecht University,  
-\begin{abstract}
-Lorem Ipsum\ldots{}
-\end{abstract}
-\begin{keywords}
-\def\sep{;\ }
-lorem\sep 
-ipsum
-\end{keywords}
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, enhanced, frame hidden, boxrule=0pt, interior hidden, sharp corners, borderline west={3pt}{0pt}{shadecolor}]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[borderline west={3pt}{0pt}{shadecolor}, boxrule=0pt, breakable, sharp corners, frame hidden, enhanced, interior hidden]}{\end{tcolorbox}}\fi
 
 \newcommand{\indep}{\perp \!\!\! \perp}
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
-\hypertarget{causal-models-and-backdoor-paths}{%
-\subsection{Causal Models and Backdoor
-Paths}\label{causal-models-and-backdoor-paths}}
+Cross-lagged panel designs, which are based on measuring the same
+individuals on the same variables for two or more occasions, are
+commonly used in psychological research to investigate relationships
+between multiple constructs over time. Several longitudinal SEM models
+have been developed for analyzing such data, of which the random
+intercept cross-lagged panel model
+\autocites[RI-CLPM,][]{hamaker2015,mulder2021} is one of the most
+popular. The RI-CLPM, shown in Figure \ref{fig:riclpm}, decomposes
+observed variables into stable between-person differences and temporal
+within-person components, and the dynamics are modeled using these
+within-person components. Usually, the effects of the variables on each
+other at later timepoints, the cross-lagged effects, are most of
+interest. These are often interpreted as causal effects, albeit
+implicitly. However, a causal interpretation presumes that both
+time-varying and time-invariant confounders are adequately controlled
+for, an assumption commonly referred to as absence of unobserved
+confounding.
 
-\emph{Include: Introduction to types of DAG structures, backdoor paths,
-and terminology}
+\textcite{usami2019} show that when certain assumptions are met, the
+random intercept in the RI-CLPM controls for unobserved heterogeneity
+resulting from confounding. This requires, in particular, that the
+confounders are time-invariant, and that the effects of the confounders
+on the variables of interest are stable over time. However, it has not
+yet been studied how the RI-CLPM performs when the effects of unobserved
+time-invariant confounders are of a time-varying nature.
+\textcite{murayama2022} show that the Dynamic Panel Model (DPM), shown
+in Figure \ref{fig:dpm}, may be an alternative in this case. This model
+is similar to the RI-CLPM due to the inclusion of lagged effects as well
+as a latent component, but the dynamics are now situated between the
+observed variables, rather than between within-person components. While
+some prefer this model because it is less restrictive and it is claimed
+to better control for unobserved confounding \autocite{allison2017},
+others would regard the absence of an explicit within-between
+decomposition as a downside \autocite[e.g.][]{hoffman2024}. Furthermore,
+it is unknown how either of these models perform when the underlying
+causal process is more complex, for example when multiple confounders
+with time-varying effects are involved.
 
-\hypertarget{confounding-in-cross-lagged-panel-models}{%
-\subsection{Confounding in Cross-Lagged Panel
-Models}\label{confounding-in-cross-lagged-panel-models}}
+\begin{figure}
 
-\emph{Include: Introduce an example SCM (and possibly the CLPM)}
+\caption{\label{fig-models}Structural Equation Model Representations of
+Two Popular Models in Panel Research}\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:riclpm}Random Intercept Cross-Lagged Panel Model
+(RI-CLPM)\textsuperscript{a}}
 
-When taking the effect of \(x_4\) on \(x_5\) as an example, confounding
-of this effect happens through several paths. First, there are paths
-through the \(x_t\) variables and \(y_t\) variables. An example is the
-\(x_4 \leftarrow y_3 \rightarrow y_4 \rightarrow y_5\) path, but also
-\(x_4 \leftarrow x_3 \rightarrow y_4 \rightarrow y_5\) and other paths
-that go back more. Secondly, there is confounding due to the
-time-specific confounders \(U_{it}\). The \(x_4 \rightarrow y_5\) effect
-would then be confounded by the
-\(x_4 \leftarrow U_4 \rightarrow y_4 \rightarrow y_5\) path (and no
-other paths). Lastly, there is confounding through the time-invariant
-confounders \(C\). Confounding on the \(x_4 \rightarrow y_5\) path
-would, for example be a \(x_4 \leftarrow C_1 \rightarrow y_5\) path, but
-also a \(x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_5\) and a
-\(x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_4 \rightarrow y_5\)
-path as well as many more. These types of confounding would result in
-biased estimates if the coefficient of regressing \(y_5\) on only
-\(x_4\) were used as an estimate.
+{\centering 
 
-The first type of confounding, confounding through previous instances of
-\(x\) and \(y\), can be resolved by controlling for these previous
-instances in the regression equation. This is what the classic
-cross-lagged panel model does. This also resolves some of the
-confounding by \(C\) that runs through previous timepoints of \(x\) and
-\(y\), so that the \(x_4 \rightarrow y_5\) path is only confounded by
-\(x_4 \leftarrow C \rightarrow y_5\) paths. The second type of
-confounding, through time-specific confounders \(U_t\), is resolved by
-allowing residuals of \(x_t\) and \(y_t\) to be correlated. The third
-type of confounding, that through time-invariant confounders \(C\), can
-sometimes be resolved through the inclusion of a latent factor, which is
-the approach that the random intercept cross-lagged panel model
-(RI-CLPM) and the dynamic panel model (DPM) take.
+\raisebox{-\height}{
 
-\hypertarget{comparison-of-ri-clpm-and-dpm}{%
-\subsection{Comparison of RI-CLPM and
-DPM}\label{comparison-of-ri-clpm-and-dpm}}
+\includegraphics[width=0.9\textwidth]{riclpm_cropped.pdf}
 
-\emph{i.e.~residual based and observed based. conceptual
-interpretations}
+}
 
-\hypertarget{ri-clpm-and-dpm-as-data-generating-mechanisms}{%
-\subsection{RI-CLPM and DPM as Data Generating
-Mechanisms}\label{ri-clpm-and-dpm-as-data-generating-mechanisms}}
+}
 
-Although the RI-CLPM and the DPM have some similarities when it comes to
-analyses, when interpreting them as causal models each of them has
-different implications regarding the data generating mechanism.
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:dpm}Dynamic Panel Model (DPM)}
 
-The RI-CLPM implies that a person's deviation from their mean at \(t-1\)
-has a causal effect on their deviation from their mean at timepoint
-\(t\). It implies that the trait-like factor for a time varying variable
-\(x\) is only related to the vector of a time varying variable \(y\)
-through the covariance with its random intercept. This can reflect, for
-example, between person differences in the tendency to give high
-responses. It may thus represent a type of measurement error that is
-systematic within a person, but random between persons.
+{\centering 
 
-The DPM implies that observed scores at timepoint \(t-1\) have a direct
-causal effect on observed scores at timepoint \(t\). Furthermore, in the
-DPM, the latent factor for \(x\) is allowed to have an effect on
-observed scores for \(y\) through the observed scores on \(x\) (and in
-part through observed scores in earlier lags of \(y\)), rather than only
-through its covariance with the latent factor for \(y\).
+\raisebox{-\height}{
 
-\hypertarget{confounding-in-the-ri-clpm-and-dpm}{%
-\subsection{Confounding in the RI-CLPM and
-DPM}\label{confounding-in-the-ri-clpm-and-dpm}}
+\includegraphics[width=0.9\textwidth]{dpm_cropped.pdf}
 
-It is known that both the RI-CLPM and the DPM, in specific cases,
-control for unobserved time-invariant confounders. Usami et al. (2019),
-for example, show that when the effects of the confounders are stable
-over time, as well as the lagged effects, the confounder does not affect
-the estimated of the lagged effects when using the RI-CLPM. The latent
-factor in the DPM, however, also controls for time-invariant confounders
-with time-invariant effects when lagged effects are not constant over
-time (Murayama \& Gfrörer, 2022). Furthermore, estimates will still be
-biased when the effects of the confounders are unstable over time.
+}
 
-Therefore, the simplest forms of both the RI-CLPM and the DPM will not
-yield unbiased estimates of the causal effects if there are unobserved
-time-invariant confounders with time-varying effects. The thesis will
-explore ways to address these types of confounding in the RI-CLPM using
-causal inference techniques such as propensity score weighting (Brown et
-al., 2021; e.g. Vansteelandt \& Daniel, 2014). However, before this
-question is answered, the extent to which unobserved time-invariant
-confounders affect the estimates of the RI-CLPM and the DPM should be
-evaluated. Thus, this research report will explore different types of
-time-invariant confounders in panel data (i.e.~with time-stable effects
-versus time-varying effects) and assess their effects on estimates of
-the RI-CLPM and DPM as well as modified versions of these models with
-freed factor loadings.
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+
+{\centering 
+
+\begin{flushleft}
+\textit{Note}. Boxes Indicate Observed Variables
+and Circles Indicate Latent Variables.
+
+$^a$ Observed Scores are Decomposed into a Stable Person-Specific
+Component ($RI_X$ and $RI_Y$), and Within-Person Components ($cX$ and
+$cY$).
+\end{flushleft}
+
+}
+
+\end{minipage}%
+
+\end{figure}
+
+Therefore, the effect of time-invariant confounders on both the RI-CLPM
+and the DPM should be explored further. This research report will
+evaluate the extent to which unobserved time-invariant confounders
+affect the estimates of the RI-CLPM and DPM. Specifically, we will
+assess whether these estimates give a good indication of underlying
+causal effects when multiple unobserved time-invariant confounders are
+involved.
+
+This report is structured as follows. We start with a conceptual
+comparison between the RI-CLPM and the DPM. Then, a hypothetical causal
+model that includes multiple time-invariant confounders is introduced.
+This model is used as the data generating mechanism for a simulation
+study that evaluates the performance of the RI-CLPM and the DPM under
+the data generating mechanism. We end with a discussion of results and
+implications.
+
+\hypertarget{a-comparison-of-the-ri-clpm-and-the-dpm}{%
+\section{A Comparison of the RI-CLPM and the
+DPM}\label{a-comparison-of-the-ri-clpm-and-the-dpm}}
+
+The RI-CLPM is commonly used with the goal to investigate causal
+relationships between variables while accounting for stable
+between-person differences \autocite{hamaker2015}. It decomposes the
+observed scores of an individual into a stable person-specific deviation
+from the grand mean, and a temporal deviation from this stable component
+by including a random intercept factor. These temporal deviations make
+up the `within' part of the RI-CLPM where the dynamics are modeled. As
+Figure \ref{fig:riclpm} shows, this factor only has direct effects on
+the observed variables, and no effect on the observed scores of the
+other variable. The random intercept of \(X\) is only related to the
+observed scores of \(Y\) through a covariance between the random
+intercepts, and vice versa.
+
+Likewise, the DPM is also used to estimate causal relationships between
+variables over time. However, the DPM does this while aiming to control
+for unmeasured time-invariant confounders \autocite{allison2017}. It
+does not explicitly separate within person dynamics from stable between
+person differences, and lagged effects are included on the observed
+scores. The latent factors in the DPM are sometimes called `accumulating
+factors' \autocite{usami2019}, as their effects on the observed
+variables are both direct, as well as indirect through lagged
+relationships between the observed variables themselves, a property that
+becomes clear from Figure \ref{fig:dpm}. To account for the fact that
+measurements are usually sampled at a random moment in time in an
+ongoing process, the observations at the first timepoints are often
+allowed to covary freely with each other and the accumulating factors
+\autocite{hamaker2005}, which is not necessary in the RI-CLPM.
+
+\textcite{hamaker2005} shows that under certain circumstances, the
+RI-CLPM and the DPM are statistically equivalent and yield equivalent
+estimates of the lagged parameters. This is the case when lagged
+parameters are invariant over time, and the factor loadings in the DPM
+at the first timepoint are constrained to reflect this, rather than
+specified as free covariances. This also implies that when these
+conditions hold in a data generating mechanism, the RI-CLPM and the DPM
+should both yield unbiased estimates. However, it is yet unknown how the
+estimates behave when the underlying mechanism is more complex.
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
 
-\hypertarget{causal-models}{%
-\subsection{Causal Models}\label{causal-models}}
+Although there is information on the behavior of the RI-CLPM and the DPM
+in simple cases of unobserved confounding, as is discussed in the
+previous section, it is yet unknown how the estimates behave when the
+underlying mechanism is more complex. Therefore, we present a simulation
+study to assess the performance of the RI-CLPM and the DPM under
+different patterns of unobserved confounding. We first introduce a
+causal model that includes multiple confounders. This serves as a
+general data generating mechanism for the simulations. Three different
+scenarios are considered, which differ with respect to the stability of
+the effects of the confounders.
 
-For all simulations, the following data generating mechanism will be
-simulated:
+\hypertarget{the-causal-model}{%
+\subsection{The Causal Model}\label{the-causal-model}}
 
-\begin{equation}\protect\hypertarget{eq-formula-t}{}{
-\begin{split}
-\begin{bmatrix}
-x_{it}\\
-y_{it}
-\end{bmatrix}
-&
-=
-\boldsymbol{\Phi}\begin{bmatrix}x_{i,t-1}\\y_{i,t-1}\end{bmatrix} + \textbf{B}_{ct}\begin{bmatrix}
-C_{1i}\\
-C_{2i}
-\end{bmatrix} +
-U_{it} +
-\begin{bmatrix}
-\epsilon_{xit}\\
-\epsilon_{yit}
-\end{bmatrix}\\
-&
-=
-\begin{bmatrix}
-\phi_{xx} & \phi_{xy}\\
-\phi_{yx} & \phi_{yy}
-\end{bmatrix}
-\begin{bmatrix}
-x_{i,t-1}\\
-y_{i,t-1}
-\end{bmatrix}
-+
-\begin{bmatrix}
-\beta_{xc_1t} & \beta_{xc_2t}\\
-\beta_{yc_1t} & \beta_{yc_2t}
-\end{bmatrix}
-\begin{bmatrix}
-C_{1i}\\
-C_{2i}
-\end{bmatrix} +
-U_{it} +
-\begin{bmatrix}
-\epsilon_{xit}\\
-\epsilon_{yit}
-\end{bmatrix}
-\end{split}
-}\label{eq-formula-t}\end{equation}
+To represent the causal model that we simulated, we use the causal
+directed acyclic graph (DAG) in Figure~\ref{fig-scm}. It shows a dynamic
+process for \(t=1,...,5\) between time-varying variables \(X\) and \(Y\)
+and includes two time-invariant baseline confounders, \(C_1\) and
+\(C_2\), that each have an effect on all future observations of \(X\)
+and \(Y\). The structure of the DAG is most similar to the dynamic panel
+model, as observed values are determined by observed values at previous
+timepoints, but it may also represent confounding on the within-person
+dynamics in the RI-CLPM. However, it should be noted that this DAG is
+not equivalent to either model, as each confounder has effects on both
+\(X\) and \(Y\), whereas the latent factors in the RI-CLPM and DPM are
+variable-specific.
 
-for \(t = 2, ..., T\) and
+\begin{figure}
 
-\[
-\begin{bmatrix}
-x_{i1}\\
-y_{i1}
-\end{bmatrix}
-=
-\begin{bmatrix}
-\beta_{xc_11} & \beta_{xc_21}\\
-\beta_{yc_11} & \beta_{yc_21}
-\end{bmatrix}
-\begin{bmatrix}
-C_{1i}\\
-C_{2i}
-\end{bmatrix} +
-U_{i1} +
-\begin{bmatrix}
-\epsilon_{xi1}\\
-\epsilon_{yi1}
-\end{bmatrix}.
+\caption{\label{fig-scm}Directed Acyclic Graph for Cross-Lagged
+Relationships Between \(X\) and \(Y\) at Multiple Timepoints.
+Confounders \(C_1\) and \(C_2\) Have Effects on Both \(X\) and \(Y\) at
+Each Timepoint. Dashed Lines Indicate the Process Before the Observed
+Timepoints}
+
+{\centering 
+
+\input{scm.tex}
+
+}
+
+\end{figure}
+
+When the underlying dynamic process has stabilized around an
+equilibrium, and when lagged effects as well as the effects of the
+confounders are time-invariant, in both the RI-CLPM and the DPM the
+latent factors will be a linear combination of the confounders
+\autocite{usami2019}. Therefore, when these conditions hold, we expect
+both models to yield unbiased estimates of the lagged effects, even when
+the confounders are unobserved. However, when the effects of the
+confounders are not time-stable, the models may not be able to fully
+account for the effects of confounders, thus resulting in biased
+effects.
+
+This causal model was simulated to assess the performance of the RI-CLPM
+and the DPM under different scenarios of confounding. These scenarios
+were all simulated as special cases of the data generating mechanism in
+Figure~\ref{fig-scm} and are represented by the following equations:
+
+For person \(i\) at timepoint \(t\), \[
+x_{it} = \phi_{xx}x_{i,t-1} + \phi_{xy}y_{i,t-1} + \gamma_{1t}C_{1i} + \gamma_{2t}C_{2i} + \epsilon_{xit},
+\] \[
+y_{it} = \phi_{yy}y_{i,t-1} + \phi_{yx}x_{i,t-1} + \delta_{1t}C_{1i} + \delta_{2t}C_{2i} + \epsilon_{yit}.
 \]
 
-Here, for person \(i\) at timepoint \(t\),
-\(\begin{bmatrix} x_{it} & y_{it}\end{bmatrix}^T\) is the data vector,
-\(\boldsymbol{\Phi}\) is the matrix of lagged effects,
-\(\textbf{B}_{ct}\) is the matrix of effects of the time-invariant
-confounders, \(\begin{bmatrix} C_{1i} & C_{2i}\end{bmatrix}^T\) is the
-vector of confounder values, \(U_{it}\) is the value of the
-time-specific confounder, and
-\(\begin{bmatrix}\epsilon_{xit} & \epsilon_{yit}\end{bmatrix}^T\) is the
-vector of residuals.
-
-In addition,
-
-\[
-\begin{bmatrix}
-\epsilon_{xit}\\
-\epsilon_{yit}
-\end{bmatrix}
-\sim
-\mathcal{N} \left(\begin{bmatrix} 0\\ 0 \end{bmatrix}, \begin{bmatrix} \psi_x & 0\\ 0 & \psi_y \end{bmatrix} \right),
+Furthermore, at the first simulated timepoint, \[
+x_{i} = \gamma_{1}C_{1i} + \gamma_{2}C_{2i} + \epsilon_{xi},
+\] \[
+y_{i} = \delta_{1}C_{1i} + \delta_{2}C_{2i} + \epsilon_{yi}.
 \]
 
-\[
-\begin{bmatrix}
-C_{1i}\\
-C_{2i}
-\end{bmatrix} \sim \mathcal{N}\left(\begin{bmatrix} 0\\0 \end{bmatrix}, \begin{bmatrix}\psi_{C_1} & 0 \\0 & \psi_{C_2} \end{bmatrix} \right),
+In addition, \[
+\epsilon_{xt} \sim \mathcal{N}(0, \psi_x),
+\] \[
+\epsilon_{yt} \sim \mathcal{N}(0, \psi_y),
+\] \[
+C_{1} \sim \mathcal{N}(0, \psi_{C_1}),
+\] \[
+C_{2} \sim \mathcal{N}(0, \psi_{C_2}).
 \]
 
-\[
-U_{it} \sim \mathcal{N}\left(0, \psi_u\right),
-\]
+From these equations follows that lagged effects and (residual)
+variances are time-invariant, whereas effects of the confounders may be
+time-varying, as indicated by the absence or presence of a time index
+\(t\) for these parameters. In our simulation, for all scenarios, lagged
+effects were set to \(\phi_{xx} =\) 0.2, \(\phi_{yy} =\) 0.3,
+\(\phi_{xy} =\) 0.15, \(\phi_{yx} =\) 0.1 \autocite[based
+on][]{mulder2023}, and (residual) variances were all set to 1.
 
-for \(i = 1,..., N\).
+Three scenarios were simulated. For all scenarios, at the start,
+\(\gamma_{1} =\) 0.3, \(\gamma_{2} =\) 0.8, \(\delta_{1} =\) 0.5, and
+\(\delta_{2} =\) 0.2. For scenario 1, the effects of the confounders
+remain stable. For scenario 2, at \(t=3\), the effects of \(C_1\) on
+\(x\) and \(y\) decrease, and remain stable afterwards (\(\gamma_{1} =\)
+0.1 and \(\delta_{1} =\) 0.2). For scenario 3, at \(t=3\) all effects of
+confounders change and afterwards remain stable. For \(C_1\) its effect
+on \(x\) increases and its effect on \(y\) decreases (\(\gamma_{1} =\)
+0.6 and \(\delta_{1} =\) 0.2), and vice versa for \(C_2\)
+(\(\gamma_{2} =\) 0.3 and \(\delta_{2} =\) 0.5).
 
-This SCM is similar to the DPM as it does not have an explicit
-decomposition of within and between effects and it is thus an
-observation based model, rather than a residual based model. One way
-that it differs from the DPM, other than having an observed confounder
-instead of a latent factor, is that the DPM includes covariances between
-the residuals at each timepoint. Because our model is specified as a
-DAG, two-headed arrows are not included, and this is thus expressed as a
-latent confounder between the residuals at each timepoint. It can be
-shown that when these the effect of these confounders on the residuals
-are 1, this specification using a confounder \(u_t\) with
-\(\sigma_{u_t}^2 = \psi_u\) is equivalent to specifying a covariance
-between the residuals where \(\sigma_{x_ty_t} = \psi_u\). Furthermore,
-the variance of the residuals at each timepoint, \(\psi_x\) and
-\(\psi_y\) are equal to the residual variances in the DPM, minus the
-variance of the unique factor \(u_t\) at that timepoint.
+For each scenario, 1000 datasets were simulated with N=500. To allow for
+convergence to an equilibrium, we simulated 50 timepoints, of which 45
+were used as burn-in. The remaining 5 timepoints, \(t=1,...,5\), were
+analyzed.
 
-The specific SCMs that will be simulated are described below.
+\hypertarget{analysis}{%
+\subsection{Analysis}\label{analysis}}
 
-\hypertarget{one-confounder-time-stable-effects.-model-1}{%
-\subsubsection{One confounder, time-stable effects. (Model
-1)}\label{one-confounder-time-stable-effects.-model-1}}
-
-When there is only one confounder C, and its effects are invariant over
-time, Equation~\ref{eq-formula-t} reduces to:
-
-\[
-\begin{bmatrix}
-x_{it}\\
-y_{it}
-\end{bmatrix}
-=
-\begin{bmatrix}
-\phi_{xx} & \phi_{xy}\\
-\phi_{yx} & \phi_{yy}
-\end{bmatrix}
-\begin{bmatrix}
-x_{i,t-1}\\
-y_{i,t-1}
-\end{bmatrix}
-+
-\begin{bmatrix}
-\beta_{xc}\\
-\beta_{yc}
-\end{bmatrix}
-C_{i} +
-U_{it} +
-\begin{bmatrix}
-\epsilon_{xit}\\
-\epsilon_{yit}
-\end{bmatrix}.
-\]
-
-The following choices were made for the parameters for the simulation:
-\(\boldsymbol{\Phi} = \begin{bmatrix} \phi_{xx} & \phi_{xy}\\ \phi_{yx} & \phi_{yy} \end{bmatrix} = \begin{bmatrix} 0.2 & 0.15\\ 0.1 & 0.3 \end{bmatrix}\),
-\(\beta_{c} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}\),
-\(\psi_u = 0.3\), \(\psi_x = \psi_y = 1 - \psi_u = 0.4\), and
-\(\psi_C = 5\).
-
-\hypertarget{one-confounder-time-stable-effect-for-x-time-varying-effect-for-y-model-2}{%
-\subsubsection{\texorpdfstring{One confounder, time-stable effect for
-\(x\), time-varying effect for \(y\) (Model
-2)}{One confounder, time-stable effect for x, time-varying effect for y (Model 2)}}\label{one-confounder-time-stable-effect-for-x-time-varying-effect-for-y-model-2}}
-
-The following choices were made for the parameters for the simulation:
-\(\boldsymbol{\Phi} = \begin{bmatrix} \phi_{xx} & \phi_{xy}\\ \phi_{yx} & \phi_{yy} \end{bmatrix} = \begin{bmatrix} 0.2 & 0.15\\ 0.1 & 0.3 \end{bmatrix}\),
-\(\beta_{ct} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}\) for
-\(t \le 47\), \(\beta_{ct} = \begin{bmatrix} 0.10\\0.20 \end{bmatrix}\)
-for \(t \ge 48\), \(\psi_u = 0.3\),
-\(\psi_x = \psi_y = 1 - \psi_u = 0.4\), and \(\psi_C = 5\). Thus, until
-\(t = 48\), this model is equivalent to the previous one. However, at
-\(t = 48\), the effect of \(C\) on \(y\) increases (and afterwards
-remains stable).
-
-\hypertarget{two-confounders.-time-stable-effects-on-x-time-varying-effects-on-y.-model-3}{%
-\subsubsection{\texorpdfstring{Two confounders. Time-stable effects on
-\(x\), time-varying effects on \(y\). (Model
-3)}{Two confounders. Time-stable effects on x, time-varying effects on y. (Model 3)}}\label{two-confounders.-time-stable-effects-on-x-time-varying-effects-on-y.-model-3}}
-
-\emph{Include: At \(t \le 47\),
-\(\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.12 & 0.15 \end{bmatrix}\).
-At \(t \ge 48\),
-\(\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.15 & 0.12 \end{bmatrix}.\)}
-
-\emph{Mogelijk verschillende sample momenten vergelijken. Dus wat als
-het bij \(t = 1\) verandert, wat als bij \(t=3\) en wat als bij \(t=5\)}
-
-\hypertarget{model-evaluation}{%
-\subsection{Model Evaluation}\label{model-evaluation}}
-
-I will simulate 1000 datasets according to each SCM, each with T = 50,
-and N = 500. The first 45 timepoints will then be discarded, as these
-are used to ensure convergence towards a trend. The last 5 timepoints
-will be kept and analyzed.
-
-Model 1 and Model 2 will be analyzed using a version of the RI-CLPM and
-the DPM with only one factor. In addition to this, Model 2 will also be
-analyzed using an alternative of the RI-CLPM with free factor loadings.
-This is not necessary for the DPM, as a DPM with 1 latent factor and
-free loadings is equivalent to a version of the RI-CLPM with 1 factor
-and free loadings (Lüdtke \& Robitzsch, 2021). Model 3 will be analyzed
-using the RI-CLPM and the DPM, as well as versions of these with free
-factor loadings.
-
-For all models, at all iterations, the cross-lagged effect of \(x_4\) on
-\(y_5\) will be extracted and evaluated. Specifically, the biases and
-MSEs corresponding with the analysis techniques for the different causal
-models will be reported with their corresponding Monte Carlo SEs, as
-well as the coverage rate of the 95\% confidence interval (see Morris et
-al., 2019).
+To assess the performance of the RI-CLPM and the DPM when confounders
+are unobserved, all simulated datasets were analyzed using the RI-CLPM
+and the DPM, as well as versions of these models with free loadings for
+the latent factors, because freeing the factor loadings may, in part,
+capture the time-varying effects of the unobserved confounders. Models
+that did not converge or did not result in positive definite covariance
+matrices were excluded. All simulations and analyses were performed
+using R version 4.3.2 \autocite{R}. Models were fit using the lavaan
+package version 0.6-16 \autocite{lavaan}.
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
-\emph{Maybe do model 1, result 1, model 2, result 2, model 3, result 3
-instead (instead of Models, Results)}
+The discussion of results focuses on the \(x_4 \rightarrow y_5\) effect
+(\(\phi_{xy} = 0.1\)). For all models, for each scenario, the bias,
+Monte-Carlo error, root mean squared error (RMSE), and coverage were
+computed, based on recommendations by \textcite{morris2019}. The bias
+was computed as the difference between the mean of the empirical
+sampling distribution, that is, the distribution of our estimates, and
+the true effect. The Monte-Carlo error was computed as the standard
+error of this estimate, and the RMSE was computed as the root of the
+mean squared deviation from the true value. Setting \(\alpha = 0.5\),
+the coverage is the proportion of times that the 95\% confidence
+interval contains the true value. The coverage is typically seen as
+acceptable when it is close to 95\%.
 
-\hypertarget{models}{%
-\section{Models}\label{models}}
+Upon initial inspection of the models, we found that for scenario 3, a
+high number of models resulted in a non positive-definite matrix of the
+latent variables. Specifically, the random intercepts or accumulating
+factors had a correlation higher than 1 in all of the RI-CLPM models and
+in most of the DPM models (91.9\% and 55.8\% for the DPM without and
+with free loadings, respectively). Therefore, for subsequent results,
+the models were rerun, with correlations between random intercepts or
+accumulating factors set to 1. It should be kept in mind, however, that
+this constitutes an exploratory approach as it was not based on theory.
+Therefore, results may not generalize well to other situations.
+
+Table~\ref{tbl-measures} shows the relative bias, RMSE, and coverage for
+the \(x_4 \rightarrow y_5\) effect for each model, in each scenario, and
+Figure~\ref{fig-biases} visualizes the biases, with their corresponding
+Monte-Carlo errors. Table~\ref{tbl-measures} and Figure~\ref{fig-biases}
+show that under scenario 1, as expected, both the RI-CLPM and the DPM
+yield unbiased estimates. Surprisingly, freeing the factor loadings
+results in bias. Specifically, they yield a negative bias, indicating
+that the effect is underestimated. Furthermore, the DPM has a lower RMSE
+than the RI-CLPM, indicating that under this scenario, the DPM shows
+less average absolute deviation from the true effect and thus may be a
+better choice. All coverages are relatively acceptable.
+
+Under scenario 2, where the effects of \(C_1\) are time-varying, both
+the RI-CLPM and the DPM yield biased estimates. Specifically, the
+RI-CLPM shows a relatively extreme underestimation of the true effect,
+and the DPM yields a small overestimation. Furthermore, freeing the
+loadings does not capture the time-varying effects of the confounders,
+as indicated by the extreme relative biases. The DPM has the lowest RMSE
+of all models. The RI-CLPM shows very low coverage, and the RI-CLPM with
+free loadings has coverage that may be too high.
+
+Under scenario 3, where both confounders have time-varying effects, all
+models show large bias. In this situation, the RI-CLPM and DPM with free
+factor loadings have lower bias than their counterparts with fixed
+loadings. Furthermore, RI-CLPM and the DPM have very low coverages, and
+the versions with free factor loadings have coverages that may be too
+high. The DPM yields the lowest RMSE.
 
 \begin{figure}
 
-\begin{minipage}[t]{0.50\linewidth}
+\caption{\label{fig-biases}Biases for the Effect of \(x_4\) on \(y_5\)}
 
 {\centering 
 
-\resizebox{!}{\linewidth}{\input{dpm.tex}}
+\includegraphics{research-report_files/figure-pdf/plot-bias-1.pdf}
+
+\begin{flushleft}
+\emph{Note.} The true effect is equal to \(\phi_{yx} = 0.1\). The Dots
+indicate the (relative) bias of each model's estimates. The error bars
+indicate the Monte-Carlo error.
+
+\end{flushleft}
 
 }
-
-\subcaption{\label{fig-anonymous-1}Dynamic Panel Model}
-\end{minipage}%
-%
-\begin{minipage}[t]{0.50\linewidth}
-
-{\centering 
-
-\resizebox{!}{\linewidth}{\input{riclpm.tex}}
-
-}
-
-\subcaption{\label{fig-anonymous-2}RI-CLPM}
-\end{minipage}%
-
-\caption{\label{fig-models}Models}
 
 \end{figure}
 
+\renewcommand{\arraystretch}{0.7}
+
+\hypertarget{tbl-measures}{}
+\begin{table}
+\caption{\label{tbl-measures}Relative Bias, RMSE, and Covarage for Each Scenario on the Effect of
+\(x_4\) on \(y_5\). The True Effect is 0.1 }\tabularnewline
+
+\centering
+\begin{tabular}{llccc}
+\toprule
+Scenario & Model & Relative Bias (\%) & RMSE\textsuperscript{1} & Coverage (\%)\textsuperscript{2}\\
+\midrule
+ & RI-CLPM & -0.11 & 0.06 & 94.40\\
+
+ & DPM & 1.52 & 0.04 & 95.69\\
+
+ & RI-CLPM (free loadings) & -17.39 & 0.10 & 95.81\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 1} & DPM (free loadings) & -6.06 & 0.07 & 94.73\\
+\cmidrule{1-5}
+ & RI-CLPM & -49.81 & 0.08 & 88.94\\
+
+ & DPM & 11.83 & 0.04 & 94.52\\
+
+ & RI-CLPM (free loadings) & -50.27 & 0.11 & 97.78\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 2} & DPM (free loadings) & -21.80 & 0.09 & 95.42\\
+\cmidrule{1-5}
+ & RI-CLPM & -88.09 & 0.11 & 71.70\\
+
+ & DPM & -50.86 & 0.07 & 79.10\\
+
+ & RI-CLPM (free loadings) & -65.04 & 0.12 & 98.00\\
+
+\multirow{-4}{*}{\raggedright\arraybackslash 3} & DPM (free loadings) & -43.64 & 0.10 & 96.65\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}\textsuperscript{1} Root Mean Square Error.}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}\textsuperscript{2} Inclusion frequency of the true effect for the 95\% confidence interval.}\\
+\end{tabular}
+\end{table}
+
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
+
+Previous research has suggested that when lagged effects and the effects
+of unobserved time-invariant confounders are stable over time, both the
+RI-CLPM and the DPM yield unbiased estimates of the true cross-lagged
+effect, even when the confounders are unobserved
+\autocite[e.g.][]{usami2019}. This characteristic of both models was
+replicated by the discussed simulations in scenario 1. However, the
+extent to which this is a reasonable causal model is debatable. For many
+phenomena, it may be more realistic to assume effects of confounders to
+vary over time.
+
+Therefore, we also considered situations where effects of one or two
+confounders changed over time. In our simulations, the RI-CLPM and the
+DPM respectively underestimated and overestimated the cross-lagged
+effects when this was the case. Furthermore, freeing the factor loadings
+in both models did not fully capture the time-varying nature as negative
+bias was observed in these models as well. However, because only few
+scenarios were considered, we cannot yet conclude that these models
+generally underestimate cross-lagged effects when confounders are
+unobserved; other data generating mechanisms may show different
+patterns. Furthermore, although bias in the estimates was present in
+these scenarios, conclusions on the direction of the effect generally
+did not change, as the estimated effects were still positive.
+
+The analyses performed in our simulation were used on simulated data
+with unobserved confounders. When confounders are measured, however, it
+may be more appropriate to model them explicitly. This can be done by
+including them in the model as covariates \autocite{mulder2021}, but
+methods specifically designed for causal inference may be more fitting
+\autocite{schafer2008a,leite2019}, especially when many confounders are
+involved or when effects are nonlinear. In reality, however, only a
+subset of confounders are likely observed, while others remain
+unobserved. In such situations, it could be advantageous to use a
+combination of methods, such as using the RI-CLPM or DPM to correct for
+some unobserved confounders, and use propensity score based causal
+inference methods to correct for observed confounders. However, the
+extent to which this is possible and sensible is yet to be explored.
+
+We should therefore investigate whether the toolbox of social science
+researchers can be expanded by integrating causal inference methods with
+cross-lagged panel models, which will be covered by the thesis. The
+presented results highlight the necessity of such research and emphasize
+the importance of acting with caution when attempting to assess cause
+and effect.
 
 \newpage{}
 
@@ -569,42 +629,8 @@ instead (instead of Models, Results)}
 \section*{References}\label{references}}
 \addcontentsline{toc}{section}{References}
 
-\hypertarget{refs}{}
-\begin{CSLReferences}{1}{0}
-\leavevmode\vadjust pre{\hypertarget{ref-brown2021}{}}%
-Brown, D. W., Greene, T. J., Swartz, M. D., Wilkinson, A. V., \&
-DeSantis, S. M. (2021). Propensity score stratification methods for
-continuous treatments. \emph{Statistics in Medicine}, \emph{40}(5),
-1189--1203. \url{https://doi.org/10.1002/sim.8835}
+\printbibliography[heading=none]
 
-\leavevmode\vadjust pre{\hypertarget{ref-ludtke2021}{}}%
-Lüdtke, O., \& Robitzsch, A. (2021). \emph{A {Critique} of the {Random
-Intercept Cross-Lagged Panel Model}} {[}Preprint{]}. {PsyArXiv}.
-\url{https://doi.org/10.31234/osf.io/6f85c}
-
-\leavevmode\vadjust pre{\hypertarget{ref-morris2019}{}}%
-Morris, T. P., White, I. R., \& Crowther, M. J. (2019). Using simulation
-studies to evaluate statistical methods. \emph{Statistics in Medicine},
-\emph{38}(11), 2074--2102. \url{https://doi.org/10.1002/sim.8086}
-
-\leavevmode\vadjust pre{\hypertarget{ref-murayama2022}{}}%
-Murayama, K., \& Gfrörer, T. (2022). \emph{Thinking clearly about
-time-invariant confounders in cross-lagged panel models: {A} guide for
-choosing a statistical model from a causal inference perspective}
-{[}Preprint{]}. {PsyArXiv}.
-
-\leavevmode\vadjust pre{\hypertarget{ref-usami2019}{}}%
-Usami, S., Murayama, K., \& Hamaker, E. L. (2019). A unified framework
-of longitudinal models to examine reciprocal relations.
-\emph{Psychological Methods}, \emph{24}(5), 637--657.
-\url{https://doi.org/10.1037/met0000210}
-
-\leavevmode\vadjust pre{\hypertarget{ref-vansteelandt2014}{}}%
-Vansteelandt, S., \& Daniel, R. m. (2014). On regression adjustment for
-the propensity score. \emph{Statistics in Medicine}, \emph{33}(23),
-4053--4072. \url{https://doi.org/10.1002/sim.6207}
-
-\end{CSLReferences}
 
 
 

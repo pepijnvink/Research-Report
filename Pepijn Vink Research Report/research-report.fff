@@ -1,0 +1,95 @@
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{fig-models}Structural Equation Model Representations of
+Two Popular Models in Panel Research}\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:riclpm}Random Intercept Cross-Lagged Panel Model
+(RI-CLPM)\textsuperscript{a}}
+
+{\centering
+
+\raisebox{-\height}{
+
+\includegraphics[width=0.9\textwidth]{riclpm_cropped.pdf}
+
+}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:dpm}Dynamic Panel Model (DPM)}
+
+{\centering
+
+\raisebox{-\height}{
+
+\includegraphics[width=0.9\textwidth]{dpm_cropped.pdf}
+
+}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+
+{\centering
+
+\begin{flushleft}
+\textit{Note}. Boxes Indicate Observed Variables
+and Circles Indicate Latent Variables.
+
+$^a$ Observed Scores are Decomposed into a Stable Person-Specific
+Component ($RI_X$ and $RI_Y$), and Within-Person Components ($cX$ and
+$cY$).
+\end{flushleft}
+
+}
+
+\end{minipage}%
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{fig-scm}Directed Acyclic Graph for Cross-Lagged
+Relationships Between \(X\) and \(Y\) at Multiple Timepoints.
+Confounders \(C_1\) and \(C_2\) Have Effects on Both \(X\) and \(Y\) at
+Each Timepoint. Dashed Lines Indicate the Process Before the Observed
+Timepoints}
+
+{\centering
+
+\input{scm.tex}
+
+}
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{fig-biases}Biases for the Effect of \(x_4\) on \(y_5\)}
+
+{\centering
+
+\includegraphics{research-report_files/figure-pdf/plot-bias-1.pdf}
+
+\begin{flushleft}
+\emph{Note.} The true effect is equal to \(\phi_{yx} = 0.1\). The Dots
+indicate the (relative) bias of each model's estimates. The error bars
+indicate the Monte-Carlo error.
+
+\end{flushleft}
+
+}
+
+\end{figure*}

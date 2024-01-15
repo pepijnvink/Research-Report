@@ -1,69 +1,332 @@
 ---
-title: "Research Report"
+title: "One Step Toward Causality: Unobserved Time-Invariant Confounding in Cross-Lagged Panel Models"
 format:
   tandf-pdf:
+    linestretch: 2
+    keep-tex: true
+    cite-method: biblatex
+    biblatexoptions: style=apa
+    output-file: Pepijn Vink Research Report_tandf.pdf
+    citeproc: false
+    filters: 
+      - "_extensions/andrewheiss/wordcount/citeproc.lua"
+      - "_extensions/andrewheiss/wordcount/wordcount.lua"
+    header-includes:
+      - \setlength{\parindent}{0.5in}
+    author:
+      - name: Pepijn Vink (6100252)
+        affiliations:
+          - ref: UU
+        orcid: 0000-0001-6960-9904
+        email: p.a.vink@uu.nl
+    affiliations:
+      - id: UU
+        name: Utrecht University
+        department: Methodology and Statistics for the Behavioral, Biomedical, and Social Sciences
+  pdf:
+    author: Pepijn A. Vink
+    documentclass: apa7
+    papersize: a4
+    classoption: [stu, floatsintext, donotrepeattitle]
+    cite-method: biblatex
+    biblatexoptions: style=apa
+    output-file: Pepijn Vink Research Report.pdf
     keep-tex: true
     citeproc: false
     filters: 
       - "_extensions/andrewheiss/wordcount/citeproc.lua"
       - "_extensions/andrewheiss/wordcount/wordcount.lua"
-author:
-  - name: Pepijn Vink (6100252)
-    affiliations:
-      - ref: UU
-    orcid: 0000-0001-6960-9904
-    email: p.a.vink@uu.nl
-affiliations:
-  - id: UU
-    name: Utrecht University
-    department: Methodology and Statistics for the Behavioral, Biomedical, and Social Sciences
-abstract: |
-  Lorem Ipsum...
+    header-includes: |
+     \affiliation{{Utrecht University}}
+     \course{Methodology and Statistics for the Behavioral, Biomedical, and Social Sciences\\
+     Research Report}
+     \shorttitle{Confounding in Cross-Lagged Panel Models}
+     \duedate{22 Dec 2023}
+     \note{Student Number: 6100252\\
+     2499 words}
+     \professor{Supervisors: Ellen Hamaker, Jeroen Mulder}
+     \raggedbottom
+  docx:
+    documentclass: apa7
+    papersize: a4
+    classoption: [stu]
+    cite-method: biblatex
+    biblatexoptions: style=apa
+    output-file: Pepijn Vink Research Report.pdf
+    keep-tex: true
+    author: Pepijn Vink (6100252)
+    citeproc: false
+    filters: 
+      - "_extensions/andrewheiss/wordcount/citeproc.lua"
+      - "_extensions/andrewheiss/wordcount/wordcount.lua"
+    header-includes: |
+     \affiliation{{Utrecht University}}
+     \course{MSBBSS Research Report}
+     \shorttitle{Research Report}
+     \duedate{22 Dec 2023}
+     \note{blank words}
+     \raggedbottom
+     \professor{Supervisors: Ellen Hamaker, Jeroen Mulder}
 keywords: 
-  - lorem
-  - ipsum
+  - RI-CLPM
+  - DPM
+  - causality
+  - longitudinal
+  - simulation
+  - confounding
 bibliography: Masterscriptie.bib
-csl: apa.csl
+fig-cap-location: top
+execute: 
+  include: false
+  echo: false
+  warning: false
+  cache: true
 header-includes:
   - \usepackage{tikz}
   - \usetikzlibrary{positioning}
+editor: 
+  markdown: 
+    wrap: 72
 ---
+
 ::: {.hidden}
 ```{=latex}
 \newcommand{\indep}{\perp \!\!\! \perp}
 ```
 :::
+
+```{r}
+#| label: read packages
+#| cache: false
+library(lavaan)
+library(tidyverse)
+library(MASS)
+library(furrr)
+library(broom)
+library(matrixcalc)
+library(cli)
+library(ggridges)
+library(jtools)
+library(kableExtra)
+```
+
+```{r}
+#| label: Read in functions
+source("../Functions/sim_scm.R")
+makeSymm <- function(m) {
+  m[upper.tri(m)] <- t(m)[upper.tri(m)]
+  return(m)
+}
+check.grad <- function(grads){
+  return(any(grads>=0.001))
+}
+```
+
+```{css echo=FALSE}
+.column-left {
+text-align: left;
+border: solid;
+}
+```
+
+```{r}
+#| label: load models
+riclpm <- read_file("../Models/riclpm.txt")
+dpm <- read_file("../Models/dpm.txt")
+riclpm_free <- read_file("../Models/riclpm_free.txt")
+dpm_free <- read_file("../Models/dpm_free.txt")
+riclpm_1f <- read_file("../Models/riclpm constr.txt")
+dpm_1f <- read_file("../Models/dpm constr.txt")
+riclpm_free_1f <- read_file("../Models/riclpm_free constr.txt")
+dpm_free_1f <- read_file("../Models/dpm_free constr.txt")
+```
+
+```{r}
+#| label: set settings for furrr
+plan(multisession)
+options(future.rng.onMisuse="ignore")
+```
+
 # Introduction
 
-## Causal Models and Backdoor Paths
-*Include: Introduction to types of DAG structures, backdoor paths, and terminology*
+Cross-lagged panel designs, which are based on measuring the same
+individuals on the same variables for two or more occasions, are
+commonly used in psychological research to investigate relationships
+between multiple constructs over time. Several longitudinal SEM
+models have been developed for analyzing such data, of which the random
+intercept cross-lagged panel model [RI-CLPM, @hamaker2015; @mulder2021]
+is one of the most popular. The RI-CLPM, shown in Figure \ref{fig:riclpm},
+decomposes observed variables into stable between-person differences and
+temporal within-person components, and the dynamics are modeled using these within-person components.
+Usually, the effects of the variables
+on each other at later timepoints, the cross-lagged effects, are most of interest. These are often interpreted as causal effects, albeit
+implicitly. However, a causal interpretation presumes that both
+time-varying and time-invariant confounders are adequately controlled
+for, an assumption commonly referred to as absence of unobserved
+confounding.
 
-## Confounding in Cross-Lagged Panel Models
-*Include: Introduce an example SCM (and possibly the CLPM)*
+@usami2019 show that when certain assumptions are met, the random
+intercept in the RI-CLPM controls for unobserved heterogeneity resulting
+from confounding. This requires, in particular, that the confounders are
+time-invariant, and that the effects of the confounders on the variables
+of interest are stable over time. However, it has not yet been studied
+how the RI-CLPM performs when the effects of unobserved time-invariant
+confounders are of a time-varying nature. @murayama2022 show that the
+Dynamic Panel Model (DPM), shown in Figure \ref{fig:dpm}, may be an alternative in
+this case. This model is similar to the RI-CLPM due to the inclusion of
+lagged effects as well as a latent component, but the dynamics are now
+situated between the observed variables, rather than between
+within-person components. While some prefer this model because it is
+less restrictive and it is claimed to better control for unobserved
+confounding [@allison2017], others would regard the absence of an
+explicit within-between decomposition as a downside [e.g. @hoffman2024].
+Furthermore, it is unknown how either of these models perform when the
+underlying causal process is more complex, for example when multiple
+confounders with time-varying effects are involved.
 
-When taking the effect of $x_4$ on $x_5$ as an example, confounding of this effect happens through several paths. First, there are paths through the $x_t$ variables and $y_t$ variables. An example is the $x_4 \leftarrow y_3 \rightarrow y_4 \rightarrow y_5$ path, but also $x_4 \leftarrow x_3 \rightarrow y_4 \rightarrow y_5$ and other paths that go back more. Secondly, there is confounding due to the time-specific confounders $U_{it}$. The $x_4 \rightarrow y_5$ effect would then be confounded by the $x_4 \leftarrow U_4 \rightarrow y_4 \rightarrow y_5$ path (and no other paths). Lastly, there is confounding through the time-invariant confounders $C$. Confounding on the $x_4 \rightarrow y_5$ path would, for example be a $x_4 \leftarrow C_1 \rightarrow y_5$ path, but also a $x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_5$ and a $x_4 \leftarrow x_3 \leftarrow C_1 \rightarrow y_4 \rightarrow y_5$ path as well as many more. These types of confounding would result in biased estimates if the coefficient of regressing $y_5$ on only $x_4$ were used as an estimate.
+\begin{figure}
 
-The first type of confounding, confounding through previous instances of $x$ and $y$, can be resolved by controlling for these previous instances in the regression equation. This is what the classic cross-lagged panel model does. This also resolves some of the confounding by $C$ that runs through previous timepoints of $x$ and $y$, so that the $x_4 \rightarrow y_5$ path is only confounded by $x_4 \leftarrow C \rightarrow y_5$ paths. The second type of confounding, through time-specific confounders $U_t$, is resolved by allowing residuals of $x_t$ and $y_t$ to be correlated. The third type of confounding, that through time-invariant confounders $C$, can sometimes be resolved through the inclusion of a latent factor, which is the approach that the random intercept cross-lagged panel model (RI-CLPM) and the dynamic panel model (DPM) take.
+\caption{\label{fig-models}Structural Equation Model Representations of
+Two Popular Models in Panel Research}\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:riclpm}Random Intercept Cross-Lagged Panel Model
+(RI-CLPM)\textsuperscript{a}}
 
-## Comparison of RI-CLPM and DPM
-*i.e. residual based and observed based. conceptual interpretations*
+{\centering 
 
-## RI-CLPM and DPM as Data Generating Mechanisms
-Although the RI-CLPM and the DPM have some similarities when it comes to analyses, when interpreting them as causal models each of them has different implications regarding the data generating mechanism.
+\raisebox{-\height}{
 
-The RI-CLPM implies that a person's deviation from their mean at $t-1$ has a causal effect on their deviation from their mean at timepoint $t$. It implies that the trait-like factor for a time varying variable $x$ is only related to the vector of a time varying variable $y$ through the covariance with its random intercept. This can reflect, for example, between person differences in the tendency to give high responses. It may thus represent a type of measurement error that is systematic within a person, but random between persons.
+\includegraphics[width=0.9\textwidth]{riclpm_cropped.pdf}
 
-The DPM implies that observed scores at timepoint $t-1$ have a direct causal effect on observed scores at timepoint $t$. Furthermore, in the DPM, the latent factor for $x$ is allowed to have an effect on observed scores for $y$ through the observed scores on $x$ (and in part through observed scores in earlier lags of $y$), rather than only through its covariance with the latent factor for $y$.
+}
 
-## Confounding in the RI-CLPM and DPM
-It is known that both the RI-CLPM and the DPM, in specific cases, control for unobserved time-invariant confounders. @usami2019, for example, show that when the effects of the confounders are stable over time, as well as the lagged effects, the confounder does not affect the estimated of the lagged effects when using the RI-CLPM. The latent factor in the DPM, however, also controls for time-invariant confounders with time-invariant effects when lagged effects are not constant over time [@murayama2022]. Furthermore, estimates will still be biased when the effects of the confounders are unstable over time.
+}
 
-Therefore, the simplest forms of both the RI-CLPM and the DPM will not yield unbiased estimates of the causal effects if there are unobserved time-invariant confounders with time-varying effects. The thesis will explore ways to address these types of confounding in the RI-CLPM using causal inference techniques such as propensity score weighting [e.g. @vansteelandt2014; @brown2021]. However, before this question is answered, the extent to which unobserved time-invariant confounders affect the estimates of the RI-CLPM and the DPM should be evaluated. Thus, this research report will explore different types of time-invariant confounders in panel data (i.e. with time-stable effects versus time-varying effects) and assess their effects on estimates of the RI-CLPM and DPM as well as modified versions of these models with freed factor loadings.
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+\subcaption{\label{fig:dpm}Dynamic Panel Model (DPM)}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics[width=0.9\textwidth]{dpm_cropped.pdf}
+
+}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{\linewidth}
+
+{\centering 
+
+\begin{flushleft}
+\textit{Note}. Boxes Indicate Observed Variables
+and Circles Indicate Latent Variables.
+
+$^a$ Observed Scores are Decomposed into a Stable Person-Specific
+Component ($RI_X$ and $RI_Y$), and Within-Person Components ($cX$ and
+$cY$).
+\end{flushleft}
+
+}
+
+\end{minipage}%
+
+\end{figure}
+
+Therefore, the effect of time-invariant confounders on both the RI-CLPM
+and the DPM should be explored further. This research report will
+evaluate the extent to which unobserved time-invariant confounders
+affect the estimates of the RI-CLPM and DPM. Specifically, we will assess whether these estimates give a good indication of
+underlying causal effects when multiple unobserved time-invariant
+confounders are involved.
+
+This report is structured as follows. We start with a conceptual
+comparison between the RI-CLPM and the DPM. Then, a hypothetical causal model that includes multiple time-invariant confounders
+is introduced. This model is used as the data generating mechanism for a simulation study that evaluates the
+performance of the RI-CLPM and the DPM under the data generating
+mechanism. We end with a discussion of results and implications.
+
+# A Comparison of the RI-CLPM and the DPM
+
+The RI-CLPM is commonly used with the goal to investigate causal
+relationships between variables while accounting for stable
+between-person differences [@hamaker2015]. It decomposes the observed
+scores of an individual into a stable person-specific deviation from the
+grand mean, and a temporal deviation from this stable component by including a random intercept factor. These temporal deviations
+make up the 'within' part of the RI-CLPM where the dynamics are modeled.
+As Figure \ref{fig:riclpm} shows, this factor only has direct effects on
+the observed variables, and no effect on the observed scores of the
+other variable. The random intercept of $X$ is only related to the
+observed scores of $Y$ through a covariance between the random
+intercepts, and vice versa.
+
+Likewise, the DPM is also used to estimate causal relationships between
+variables over time. However, the DPM does this while aiming to control
+for unmeasured time-invariant confounders [@allison2017]. It does not
+explicitly separate within person dynamics from stable between person
+differences, and lagged effects are included on the observed scores. The
+latent factors in the DPM are sometimes called 'accumulating factors'
+[@usami2019], as their effects on the observed variables are both
+direct, as well as indirect through lagged relationships between the
+observed variables themselves, a property that becomes clear from
+Figure \ref{fig:dpm}. To account for the fact that measurements are usually sampled
+at a random moment in time in an ongoing process, the observations at
+the first timepoints are often allowed to covary freely with each other
+and the accumulating factors [@hamaker2005], which is not necessary in
+the RI-CLPM.
+
+@hamaker2005 shows that under certain circumstances, the RI-CLPM and the DPM are
+statistically equivalent and yield equivalent estimates of the lagged
+parameters. This is the case when lagged parameters are
+invariant over time, and the factor loadings in the DPM at the first
+timepoint are constrained to reflect this, rather than specified as free
+covariances. This also implies that when these conditions hold in a data
+generating mechanism, the RI-CLPM and the DPM should both yield unbiased
+estimates. However, it is yet unknown how the estimates behave when the underlying mechanism is more complex. 
 
 # Methods
 
-## Causal Models
-For all simulations, the following data generating mechanism will be simulated:
+Although there is information on the behavior of the RI-CLPM and the DPM in simple cases of unobserved confounding, as is discussed in the previous section, it is yet unknown how the estimates behave when the underlying mechanism is more complex. Therefore, we present a simulation study to assess the performance of
+the RI-CLPM and the DPM under different patterns of unobserved confounding. We first introduce
+a causal model that includes multiple confounders. This serves as a
+general data generating mechanism for the simulations. Three different
+scenarios are considered, which differ with respect to the stability of
+the effects of the confounders.
+
+## The Causal Model
+
+To represent the causal model that we simulated, we use the causal
+directed acyclic graph (DAG) in @fig-scm. It shows a dynamic process for
+$t=1,...,5$ between time-varying variables $X$ and $Y$ and includes two
+time-invariant baseline confounders, $C_1$ and $C_2$, that each have an
+effect on all future observations of $X$ and $Y$. The structure of the
+DAG is most similar to the dynamic panel model, as observed values are
+determined by observed values at previous timepoints, but it may also
+represent confounding on the within-person dynamics in the RI-CLPM. However,
+it should be noted that this DAG is not equivalent to either model, as
+each confounder has effects on both $X$ and $Y$, whereas the latent
+factors in the RI-CLPM and DPM are variable-specific.
+
+![Directed Acyclic Graph for Cross-Lagged Relationships Between $X$ and $Y$ at Multiple Timepoints. Confounders $C_1$ and $C_2$ Have Effects on Both $X$ and $Y$ at Each Timepoint. Dashed Lines Indicate the Process Before the Observed Timepoints](scm.tex){#fig-scm}
+
+When the underlying dynamic process has stabilized around an
+equilibrium, and when lagged effects as well as the effects of the
+confounders are time-invariant, in both the RI-CLPM and the DPM the
+latent factors will be a linear combination of the confounders
+[@usami2019]. Therefore, when these conditions hold, we expect both
+models to yield unbiased estimates of the lagged effects, even when the
+confounders are unobserved. However, when the effects of the confounders
+are not time-stable, the models may not be able to fully account for the
+effects of confounders, thus resulting in biased effects.
+
+This causal model was simulated to assess the performance of the RI-CLPM
+and the DPM under different scenarios of confounding. These scenarios were all simulated as
+special cases of the data generating mechanism in @fig-scm and are
+represented by the following equations:
 
 ::: {.content-hidden}
 $$
@@ -73,7 +336,6 @@ $$ {#eq-matrix-t}
 $$
 \textbf{X}_1 = \textbf{B}_{c1}\textbf{C}^T + \textbf{1}\textbf{u}_1 + \textbf{E}_1.
 $$
-:::
 
 $$
 \begin{split}
@@ -142,7 +404,15 @@ U_{i1} +
 \end{bmatrix}.
 $$
 
-Here, for person $i$ at timepoint $t$, $\begin{bmatrix} x_{it} & y_{it}\end{bmatrix}^T$ is the data vector, $\boldsymbol{\Phi}$ is the matrix of lagged effects, $\textbf{B}_{ct}$ is the matrix of effects of the time-invariant confounders, $\begin{bmatrix} C_{1i} & C_{2i}\end{bmatrix}^T$ is the vector of confounder values, $U_{it}$ is the value of the time-specific confounder, and $\begin{bmatrix}\epsilon_{xit} & \epsilon_{yit}\end{bmatrix}^T$ is the vector of residuals.
+Here, for person $i$ at timepoint $t$,
+$\begin{bmatrix} x_{it} & y_{it}\end{bmatrix}^T$ is the data vector,
+$\boldsymbol{\Phi}$ is the matrix of lagged effects, $\textbf{B}_{ct}$
+is the matrix of effects of the time-invariant confounders,
+$\begin{bmatrix} C_{1i} & C_{2i}\end{bmatrix}^T$ is the vector of
+confounder values, $U_{it}$ is the value of the time-specific
+confounder, and
+$\begin{bmatrix}\epsilon_{xit} & \epsilon_{yit}\end{bmatrix}^T$ is the
+vector of residuals.
 
 In addition,
 
@@ -167,22 +437,179 @@ U_{it} \sim \mathcal{N}\left(0, \psi_u\right),
 $$
 
 for $i = 1,..., N$.
+:::
 
-This SCM is similar to the DPM as it does not have an explicit decomposition of within and between effects and it is thus an observation based model, rather than a residual based model. One way that it differs from the DPM, other than having an observed confounder instead of a latent factor, is that the DPM includes covariances between the residuals at each timepoint. Because our model is specified as a DAG, two-headed arrows are not included, and this is thus expressed as a latent confounder between the residuals at each timepoint. It can be shown that when these the effect of these confounders on the residuals are 1, this specification using a confounder $u_t$ with $\sigma_{u_t}^2 = \psi_u$ is equivalent to specifying a covariance between the residuals where $\sigma_{x_ty_t} = \psi_u$. Furthermore, the variance of the residuals at each timepoint, $\psi_x$ and $\psi_y$ are equal to the residual variances in the DPM, minus the variance of the unique factor $u_t$ at that timepoint.
+For person $i$ at timepoint $t$,
+$$
+x_{it} = \phi_{xx}x_{i,t-1} + \phi_{xy}y_{i,t-1} + \gamma_{1t}C_{1i} + \gamma_{2t}C_{2i} + \epsilon_{xit},
+$$
+$$
+y_{it} = \phi_{yy}y_{i,t-1} + \phi_{yx}x_{i,t-1} + \delta_{1t}C_{1i} + \delta_{2t}C_{2i} + \epsilon_{yit}.
+$$
 
-The specific SCMs that will be simulated are described below.
+Furthermore, at the first simulated timepoint,
+$$
+x_{i} = \gamma_{1}C_{1i} + \gamma_{2}C_{2i} + \epsilon_{xi},
+$$
+$$
+y_{i} = \delta_{1}C_{1i} + \delta_{2}C_{2i} + \epsilon_{yi}.
+$$
 
-### One confounder, time-stable effects. (Model 1)
+In addition,
+$$
+\epsilon_{xt} \sim \mathcal{N}(0, \psi_x),
+$$
+$$
+\epsilon_{yt} \sim \mathcal{N}(0, \psi_y),
+$$
+$$
+C_{1} \sim \mathcal{N}(0, \psi_{C_1}),
+$$
+$$
+C_{2} \sim \mathcal{N}(0, \psi_{C_2}).
+$$
 
-::: {.content-hidden}
-When there is only one confounder C, and its effects are invariant over time, @eq-matrix-t reduces to:
+```{r}
+#| label: specify stable params
+#| include: false
+#| eval: true
+# set phi matrix
+phixx <- 0.2
+phixy <- 0.15
+phiyy <- 0.30
+phiyx <- 0.10
+phi <- matrix(c(phixx, phixy,
+                phiyx, phiyy),
+              nrow = 2,
+              byrow=T)
+
+# speciy residual variances
+psix <- 1
+psiy <- 1
+psixy <- c(psix, psiy)
+
+# specify variances of confounders
+psic1 <- 1
+psic2 <- 1
+psic <- c(psic1, psic2)
+```
+
+```{r}
+#| label: specify betas for M1
+#| include: false
+#| eval: true
+# specify effects of confounders
+betaxc1 <- 0.3
+betaxc2 <- 0.8
+
+betayc1 <- 0.5
+betayc2 <- 0.2
+
+# put in matrix
+betac_1 <- matrix(c(betaxc1, betaxc2,
+                    betayc1, betayc2),
+                  nrow = 2,
+                  byrow = T)
+```
+
+```{r}
+#| label: specify betas for M2
+#| eval: true
+# first beta matrix
+betaxc1_2 <- 0.3
+betaxc2_2 <- 0.8
+
+betayc1_2 <- 0.5
+betayc2_2 <- 0.2
+
+betac_2 <- matrix(c(betaxc1_2, betaxc2_2,
+                    betayc1_2, betayc2_2),
+                  nrow = 2,
+                  byrow = T)
+# second beta matrix
+betax2c1_2 <- 0.1
+betay2c1_2 <- 0.2 # only effect of C1 changes
+
+betac2_2 <- matrix(c(betax2c1_2, betaxc2_2,
+                    betay2c1_2, betayc2_2),
+                   nrow = 2,
+                   byrow = T)
+```
+
+```{r}
+#| label: specifty betas for M3
+#| eval: true
+# first beta matrix
+betaxc1_3 <- 0.3
+betaxc2_3 <- 0.8
+
+betayc1_3 <- 0.5
+betayc2_3 <- 0.2
+
+betac_3 <- matrix(c(betaxc1, betaxc2,
+                    betayc1, betayc2),
+                  nrow = 2,
+                  byrow = T)
+# second beta matrix
+betax2c1_3 <- 0.6
+betay2c1_3 <- 0.2
+
+betax2c2_3 <- 0.3
+betay2c2_3 <-0.5
+
+betac2_3 <- matrix(c(betax2c1_3, betax2c2_3,
+                    betay2c1_3, betay2c2_3),
+                   nrow = 2,
+                   byrow = T)
+```
+
+From these equations follows that lagged effects and (residual) variances
+are time-invariant, whereas effects of the confounders may be
+time-varying, as indicated by the absence or presence of a time index $t$ for these
+parameters. In our simulation, for all scenarios, lagged effects were
+set to $\phi_{xx} =$ `r phixx`, $\phi_{yy} =$ `r phiyy`, $\phi_{xy} =$
+`r phixy`, $\phi_{yx} =$ `r phiyx` [based on @mulder2023], and
+(residual) variances were all set to 1.
+
+Three scenarios were simulated. For all scenarios, at the start,
+$\gamma_{1} =$ `r betaxc1`, $\gamma_{2} =$ `r betaxc2`, $\delta_{1} =$
+`r betayc1`, and $\delta_{2} =$ `r betayc2`. For scenario 1, the effects
+of the confounders remain stable. For scenario 2, at $t=3$, the effects
+of $C_1$ on $x$ and $y$ decrease, and remain stable afterwards ($\gamma_{1} =$ `r betax2c1_2` and
+$\delta_{1} =$ `r betay2c1_2`). For
+scenario 3, at $t=3$ all effects of confounders change and afterwards
+remain stable. For $C_1$ its effect on $x$ increases and
+its effect on $y$ decreases ($\gamma_{1} =$ `r betax2c1_3` and
+$\delta_{1} =$ `r betay2c1_3`), and vice versa for $C_2$ ($\gamma_{2} =$ `r betax2c2_3` and
+$\delta_{2} =$ `r betay2c2_3`).
+
+For each scenario, 1000 datasets were simulated with N=500. To allow for
+convergence to an equilibrium, we simulated 50 timepoints, of which 45
+were used as burn-in. The remaining 5 timepoints, $t=1,...,5$,
+were analyzed.
+
+## Analysis
+
+To assess the performance of the RI-CLPM and the DPM when confounders
+are unobserved, all simulated datasets were analyzed
+using the RI-CLPM and the DPM, as well as versions of these models with
+free loadings for the latent factors, because freeing the factor
+loadings may, in part, capture the time-varying effects of the
+unobserved confounders. Models that did not converge or did not result in
+positive definite covariance matrices were excluded. All simulations and
+analyses were performed using R version 4.3.2 [@R]. Models were fit
+using the lavaan package version 0.6-16 [@lavaan].
+
+::: content-hidden
+When there is only one confounder C, and its effects are invariant over
+time, @eq-matrix-t reduces to:
 
 $$
 \textbf{X}_t = \boldsymbol{\Phi}\textbf{X}_{t-1} + \beta_{c}\textbf{c}^T + \textbf{1}\textbf{u}_t + \textbf{E}_t.
 $$
-:::
 
-When there is only one confounder C, and its effects are invariant over time, @eq-formula-t reduces to:
+When there is only one confounder C, and its effects are invariant over
+time, @eq-formula-t reduces to:
 
 $$
 \begin{bmatrix}
@@ -210,55 +637,872 @@ U_{it} +
 \epsilon_{yit}
 \end{bmatrix}.
 $$
+:::
 
-The following choices were made for the parameters for the simulation:
-$\boldsymbol{\Phi} = \begin{bmatrix}
-\phi_{xx} & \phi_{xy}\\
-\phi_{yx} & \phi_{yy}
-\end{bmatrix} = \begin{bmatrix}
-0.2 & 0.15\\
-0.1 & 0.3
-\end{bmatrix}$, $\beta_{c} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}$, $\psi_u = 0.3$, $\psi_x = \psi_y = 1 - \psi_u = 0.4$, and $\psi_C = 5$.
+```{r}
+#| label: sim M1
+#| include: false
+#| cache: true
+# simulate data under model 1
+variable.names <- purrr::map(.x = c(1:5), 
+                             function(x) purrr::map2(.x = c("x", "y"),
+                                                     .y = x,
+                                                     .f = paste0)) %>% 
+    unlist()
+data_1 <- sim_scm(
+  timepoints = 5,
+  burnin = 45,
+  N = 500,
+  ndat = 1000,
+  phi = phi,
+  betac = betac_1,
+  psi = psixy,
+  intercepts = c(0,0),
+  meanc = c(0, 0),
+  varC = psic,
+  seed = 42
+)
+```
 
-### One confounder, time-stable effect for $x$, time-varying effect for $y$ (Model 2)
+```{r}
+#| cache: true
+#| label: Analyze models for M1
+fits_1 <- data_1 %>%
+  mutate(data_short = map(data, ~dplyr::select(., x1:y5)),
+         riclpm.fit = future_map(data_short, ~lavaan(riclpm, data = .)),
+         dpm.fit = future_map(data_short, ~lavaan(dpm, data = .)),
+         riclpm.fit.free = future_map(data_short, ~lavaan(riclpm_free, data = .)),
+         dpm.fit.free = future_map(data_short, ~lavaan(dpm_free, data = .)))
+```
 
-The following choices were made for the parameters for the simulation:
-$\boldsymbol{\Phi} = \begin{bmatrix}
-\phi_{xx} & \phi_{xy}\\
-\phi_{yx} & \phi_{yy}
-\end{bmatrix} = \begin{bmatrix}
-0.2 & 0.15\\
-0.1 & 0.3
-\end{bmatrix}$, $\beta_{ct} = \begin{bmatrix} 0.10\\0.12 \end{bmatrix}$ for $t \le 47$, $\beta_{ct} = \begin{bmatrix} 0.10\\0.20 \end{bmatrix}$ for $t \ge 48$, $\psi_u = 0.3$, $\psi_x = \psi_y = 1 - \psi_u = 0.4$, and $\psi_C = 5$. Thus, until $t = 48$, this model is equivalent to the previous one. However, at $t = 48$, the effect of $C$ on $y$ increases (and afterwards remains stable).
+```{r}
+#| label: check converged M1
+m1.riclpm.conv <- fits_1 %>%
+  mutate(converged = map(riclpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m1.dpm.conv <- fits_1 %>%
+  mutate(converged = map(dpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m1.riclpm.free.conv <- fits_1 %>%
+  mutate(converged = map(riclpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m1.dpm.free.conv <- fits_1 %>%
+  mutate(converged = map(dpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+```
 
-### Two confounders. Time-stable effects on $x$, time-varying effects on $y$. (Model 3)
-*Include: At $t \le 47$, $\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.12 & 0.15 \end{bmatrix}$. At $t \ge 48$, $\textbf{B}_{ct} = \begin{bmatrix} 0.1 & 0.08\\ 0.15 & 0.12 \end{bmatrix}.$*
+```{r}
+#| label: extract measures M1
+#| cache: true
+m1.est.riclpm <- m1.riclpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.est = map(riclpm.fit, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.se = map(riclpm.fit, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.low = map(riclpm.fit, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.up = map(riclpm.fit, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm = case_when(ci.riclpm.low > phi[2,1] | ci.riclpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
 
-*Mogelijk verschillende sample momenten vergelijken. Dus wat als het bij $t = 1$ verandert, wat als bij $t=3$ en wat als bij $t=5$*
+m1.est.dpm <- m1.dpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.est = map(dpm.fit, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.se = map(dpm.fit, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.low = map(dpm.fit, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.up = map(dpm.fit, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm = case_when(ci.dpm.low > phi[2,1] | ci.dpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
 
-## Model Evaluation
-I will simulate 1000 datasets according to each SCM, each with T = 50, and N = 500. The first 45 timepoints will then be discarded, as these are used to ensure convergence towards a trend. The last 5 timepoints will be kept and analyzed.
+m1.est.riclpm.free <- m1.riclpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.free.est = map(riclpm.fit.free, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.free.se = map(riclpm.fit.free, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.free.low = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.free.up = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm.free = case_when(ci.riclpm.free.low > phi[2,1] | ci.riclpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
 
-Model 1 and Model 2 will be analyzed using a version of the RI-CLPM and the DPM with only one factor. In addition to this, Model 2 will also be analyzed using an alternative of the RI-CLPM with free factor loadings. This is not necessary for the DPM, as a DPM with 1 latent factor and free loadings is equivalent to a version of the RI-CLPM with 1 factor and free loadings [@ludtke2021]. Model 3 will be analyzed using the RI-CLPM and the DPM, as well as versions of these with free factor loadings.
+m1.est.dpm.free <- m1.dpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.free.est = map(dpm.fit.free, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.free.se = map(dpm.fit.free, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.free.low = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.free.up = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm.free = case_when(ci.dpm.free.low > phi[2,1] | ci.dpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+```
 
-For all models, at all iterations, the cross-lagged effect of $x_4$ on $y_5$ will be extracted and evaluated. Specifically, the biases and MSEs corresponding with the analysis techniques for the different causal models will be reported with their corresponding Monte Carlo SEs, as well as the coverage rate of the 95\% confidence interval [see @morris2019].
+```{r}
+#| label: biases M1
+m1.biases.riclpm <- m1.est.riclpm %>%
+  summarise(bias.riclpm_est = mean(.$riclpm.est-phi[2,1]),
+            mcse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm_est = empse.riclpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm_est = sqrt(mean((.$riclpm.est-phi[2,1])^2)),
+            coverage.riclpm = mean(ci.include.riclpm))
+
+m1.biases.dpm <- m1.est.dpm %>%
+  summarise(bias.dpm_est = mean(.$dpm.est-phi[2,1]),
+            mcse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm_est = empse.dpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm_est = sqrt(mean((.$dpm.est-phi[2,1])^2)),
+            coverage.dpm = mean(ci.include.dpm))
+
+m1.biases.riclpm.free <- m1.est.riclpm.free %>%
+  summarise(bias.riclpm.free_est = mean(.$riclpm.free.est-phi[2,1]),
+            mcse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm.free_est = empse.riclpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm.free_est = sqrt(mean((.$riclpm.free.est-phi[2,1])^2)),
+            coverage.riclpm.free = mean(ci.include.riclpm.free))
+
+m1.biases.dpm.free <- m1.est.dpm.free %>%
+  summarise(bias.dpm.free_est = mean(.$dpm.free.est-phi[2,1]),
+            mcse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm.free_est = empse.dpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm.free_est = sqrt(mean((.$dpm.free.est-phi[2,1])^2)),
+            coverage.dpm.free = mean(ci.include.dpm.free))
+```
+
+```{r}
+#| label: bias table M1
+m1_biases <- tibble(val = c("bias", "mcse", "rmse", "coverage"),
+                    riclpm = c(m1.biases.riclpm$bias.riclpm_est,m1.biases.riclpm$mcse.riclpm_est, m1.biases.riclpm$rmse.riclpm_est, m1.biases.riclpm$coverage.riclpm),
+                    dpm = c(m1.biases.dpm$bias.dpm_est,m1.biases.dpm$mcse.dpm_est, m1.biases.dpm$rmse.dpm_est, m1.biases.dpm$coverage.dpm),
+                    riclpm.free = c(m1.biases.riclpm.free$bias.riclpm.free_est,m1.biases.riclpm.free$mcse.riclpm.free_est, m1.biases.riclpm.free$rmse.riclpm.free_est, m1.biases.riclpm.free$coverage.riclpm.free),
+                    dpm.free = c(m1.biases.dpm.free$bias.dpm.free_est,m1.biases.dpm.free$mcse.dpm.free_est, m1.biases.dpm.free$rmse.dpm.free_est, m1.biases.dpm.free$coverage.dpm.free)) %>%
+  pivot_longer(cols=-1) %>%
+  pivot_wider(names_from = "val", values_from = "value")
+```
+
+```{r}
+m1.ests <- tibble(
+  model = c(rep("riclpm", nrow(m1.est.riclpm)), rep("dpm", nrow(m1.est.dpm)), rep("riclpm.free", nrow(m1.est.riclpm.free)), rep("dpm.free", nrow(m1.est.dpm.free))),
+  bias = c(m1.est.riclpm$riclpm.est-phi[2,1], m1.est.dpm$dpm.est-phi[2,1], m1.est.riclpm.free$riclpm.free.est-phi[2,1], m1.est.dpm.free$dpm.free.est-phi[2,1])
+)
+```
+
+```{r}
+#| include: false
+m1.ests %>%
+  mutate(model = fct_relevel(model, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_density_ridges(aes(fill=model),
+                      quantile_lines = T,
+                      quantile_fun = median) +
+  scale_y_discrete(limits = rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_classic()
+```
+
+```{r}
+#| label: simulate data under M2
+#| cache: true
+data_2 <- sim_scm(
+  timepoints = 5,
+  burnin = 45,
+  N = 500,
+  ndat = 1000,
+  phi = phi,
+  betac = betac_2,
+  betac2 = betac2_2,
+  time_beta_change = 3,
+  psi = psixy,
+  intercepts = c(0,0),
+  meanc = c(0, 0),
+  varC = psic,
+  seed = 42
+)
+```
+
+```{r}
+#| cache: true
+#| label: Analyze models for M2
+fits_2 <- data_2 %>%
+  mutate(data_short = map(data, ~dplyr::select(., x1:y5)),
+         riclpm.fit = future_map(data_short, ~lavaan(riclpm, data = .)),
+         dpm.fit = future_map(data_short, ~lavaan(dpm, data = .)),
+         riclpm.fit.free = future_map(data_short, ~lavaan(riclpm_free, data = .)),
+         dpm.fit.free = future_map(data_short, ~lavaan(dpm_free, data = .)))
+```
+
+```{r}
+#| label: check convergence M2
+m2.riclpm.conv <- fits_2 %>%
+  mutate(converged = map(riclpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m2.dpm.conv <- fits_2 %>%
+  mutate(converged = map(dpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m2.riclpm.free.conv <- fits_2 %>%
+  mutate(converged = map(riclpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m2.dpm.free.conv <- fits_2 %>%
+  mutate(converged = map(dpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+```
+
+```{r}
+#| label: estimates M2
+m2.est.riclpm <- m2.riclpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.est = map(riclpm.fit, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.se = map(riclpm.fit, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.low = map(riclpm.fit, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.up = map(riclpm.fit, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm = case_when(ci.riclpm.low > phi[2,1] | ci.riclpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m2.est.dpm <- m2.dpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.est = map(dpm.fit, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.se = map(dpm.fit, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.low = map(dpm.fit, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.up = map(dpm.fit, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm = case_when(ci.dpm.low > phi[2,1] | ci.dpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m2.est.riclpm.free <- m2.riclpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.free.est = map(riclpm.fit.free, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.free.se = map(riclpm.fit.free, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.free.low = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.free.up = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm.free = case_when(ci.riclpm.free.low > phi[2,1] | ci.riclpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m2.est.dpm.free <- m2.dpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.free.est = map(dpm.fit.free, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.free.se = map(dpm.fit.free, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.free.low = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.free.up = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm.free = case_when(ci.dpm.free.low > phi[2,1] | ci.dpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+```
+
+```{r}
+#| label: biases M2
+m2.biases.riclpm <- m2.est.riclpm %>%
+  summarise(bias.riclpm_est = mean(.$riclpm.est-phi[2,1]),
+            mcse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm_est = empse.riclpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm_est = sqrt(mean((.$riclpm.est-phi[2,1])^2)),
+            coverage.riclpm = mean(ci.include.riclpm))
+
+m2.biases.dpm <- m2.est.dpm %>%
+  summarise(bias.dpm_est = mean(.$dpm.est-phi[2,1]),
+            mcse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm_est = empse.dpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm_est = sqrt(mean((.$dpm.est-phi[2,1])^2)),
+            coverage.dpm = mean(ci.include.dpm))
+
+m2.biases.riclpm.free <- m2.est.riclpm.free %>%
+  summarise(bias.riclpm.free_est = mean(.$riclpm.free.est-phi[2,1]),
+            mcse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm.free_est = empse.riclpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm.free_est = sqrt(mean((.$riclpm.free.est-phi[2,1])^2)),
+            coverage.riclpm.free = mean(ci.include.riclpm.free))
+
+m2.biases.dpm.free <- m2.est.dpm.free %>%
+  summarise(bias.dpm.free_est = mean(.$dpm.free.est-phi[2,1]),
+            mcse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm.free_est = empse.dpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm.free_est = sqrt(mean((.$dpm.free.est-phi[2,1])^2)),
+            coverage.dpm.free = mean(ci.include.dpm.free))
+```
+
+```{r}
+#| label: bias table M2
+m2_biases <- tibble(val = c("bias", "mcse", "rmse", "coverage"),
+                    riclpm = c(m2.biases.riclpm$bias.riclpm_est,m2.biases.riclpm$mcse.riclpm_est, m2.biases.riclpm$rmse.riclpm_est, m2.biases.riclpm$coverage.riclpm),
+                    dpm = c(m2.biases.dpm$bias.dpm_est,m2.biases.dpm$mcse.dpm_est, m2.biases.dpm$rmse.dpm_est, m2.biases.dpm$coverage.dpm),
+                    riclpm.free = c(m2.biases.riclpm.free$bias.riclpm.free_est,m2.biases.riclpm.free$mcse.riclpm.free_est, m2.biases.riclpm.free$rmse.riclpm.free_est, m2.biases.riclpm.free$coverage.riclpm.free),
+                    dpm.free = c(m2.biases.dpm.free$bias.dpm.free_est,m2.biases.dpm.free$mcse.dpm.free_est, m2.biases.dpm.free$rmse.dpm.free_est, m2.biases.dpm.free$coverage.dpm.free)) %>%
+  pivot_longer(cols=-1) %>%
+  pivot_wider(names_from = "val", values_from = "value")
+```
+
+```{r}
+#| label: keep estiomates M2
+m2.ests <- tibble(
+  model = c(rep("riclpm", nrow(m2.est.riclpm)), rep("dpm", nrow(m2.est.dpm)), rep("riclpm.free", nrow(m2.est.riclpm.free)), rep("dpm.free", nrow(m2.est.dpm.free))),
+  bias = c(m2.est.riclpm$riclpm.est-phi[2,1], m2.est.dpm$dpm.est-phi[2,1], m2.est.riclpm.free$riclpm.free.est-phi[2,1], m2.est.dpm.free$dpm.free.est-phi[2,1])
+)
+```
+
+```{r}
+#| label: plot estimates M2
+m2.ests %>%
+  mutate(model = fct_relevel(model, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_density_ridges(aes(fill=model),
+                      quantile_lines = T,
+                      quantile_fun = mean) +
+  scale_y_discrete(limits = rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_classic()
+```
+
+```{r}
+#| label: simulate data under M3
+#| cache: true
+data_3 <- sim_scm(
+  timepoints = 5,
+  burnin = 45,
+  N = 500,
+  ndat = 1000,
+  phi = phi,
+  betac = betac_3,
+  betac2 = betac2_3,
+  time_beta_change = 3,
+  psi = psixy,
+  intercepts = c(0,0),
+  meanc = c(0, 0),
+  varC = psic,
+  seed = 42
+)
+```
+
+```{r}
+#| cache: true
+#| label: Analyze models for M3
+fits_3 <- data_3 %>%
+  mutate(data_short = map(data, ~dplyr::select(., x1:y5)),
+         riclpm.fit = future_map(data_short, ~lavaan(riclpm, data = .)),
+         dpm.fit = future_map(data_short, ~lavaan(dpm, data = .)),
+         riclpm.fit.free = future_map(data_short, ~lavaan(riclpm_free, data = .)),
+         dpm.fit.free = future_map(data_short, ~lavaan(dpm_free, data = .)))
+```
+
+```{r}
+#| label: check convergence M3
+m3.riclpm.conv <- fits_3 %>%
+  mutate(converged = map(riclpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.dpm.conv <- fits_3 %>%
+  mutate(converged = map(dpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.riclpm.free.conv <- fits_3 %>%
+  mutate(converged = map(riclpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.dpm.free.conv <- fits_3 %>%
+  mutate(converged = map(dpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+```
+
+```{r}
+#| eval: true
+summary(m3.riclpm.conv$posdef)
+summary(m3.dpm.conv$posdef)
+summary(m3.riclpm.free.conv$posdef)
+summary(m3.dpm.free.conv$posdef)
+```
+
+```{r}
+#| label: estimates M3
+#| eval: false
+m3.est.riclpm <- m3.riclpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.est = map(riclpm.fit, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.se = map(riclpm.fit, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.low = map(riclpm.fit, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.up = map(riclpm.fit, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm = case_when(ci.riclpm.low > phi[2,1] | ci.riclpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.dpm <- m3.dpm.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.est = map(dpm.fit, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.se = map(dpm.fit, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.low = map(dpm.fit, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.up = map(dpm.fit, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm = case_when(ci.dpm.low > phi[2,1] | ci.dpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.riclpm.free <- m3.riclpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.free.est = map(riclpm.fit.free, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.free.se = map(riclpm.fit.free, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.free.low = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.free.up = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm.free = case_when(ci.riclpm.free.low > phi[2,1] | ci.riclpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.dpm.free <- m3.dpm.free.conv %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.free.est = map(dpm.fit.free, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.free.se = map(dpm.fit.free, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.free.low = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.free.up = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm.free = case_when(ci.dpm.free.low > phi[2,1] | ci.dpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+```
+
+```{r}
+#| cache: true
+#| label: Analyze models for M3_1f
+fits_3.1f <- data_3 %>%
+  mutate(data_short = map(data, ~dplyr::select(., x1:y5)),
+         riclpm.fit = future_map(data_short, ~lavaan(riclpm_1f, data = .)),
+         dpm.fit = future_map(data_short, ~lavaan(dpm_1f, data = .)),
+         riclpm.fit.free = future_map(data_short, ~lavaan(riclpm_free_1f, data = .)),
+         dpm.fit.free = future_map(data_short, ~lavaan(dpm_free_1f, data = .)))
+```
+
+```{r}
+#| label: check convergence M3_1f
+m3.riclpm.conv.1f <- fits_3.1f %>%
+  mutate(converged = map(riclpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.dpm.conv.1f <- fits_3.1f %>%
+  mutate(converged = map(dpm.fit, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.riclpm.free.conv.1f <- fits_3.1f %>%
+  mutate(converged = map(riclpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(riclpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(riclpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(riclpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+m3.dpm.free.conv.1f <- fits_3.1f %>%
+  mutate(converged = map(dpm.fit.free, ~lavInspect(object = .x, "converged")),
+         grads.check = map(dpm.fit.free, ~check.grad(lavInspect(.x, "optim.gradient"))),
+         cov = map(dpm.fit.free, ~lavInspect(.x, what = "cov.lv")),
+         cov = map(cov, makeSymm),
+         posdef = map(cov, is.positive.semi.definite),
+         cov2 = map(dpm.fit.free, ~lavInspect(.x, what = "theta")),
+         cov2 = map(cov2, makeSymm),
+         posdef2 = map(cov2, is.positive.semi.definite)) %>%
+  unnest(cols=c("converged", "grads.check", "posdef", "posdef2"))
+```
+
+```{r}
+#| label: estimates M3_1f
+m3.est.riclpm.1f <- m3.riclpm.conv.1f %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.est = map(riclpm.fit, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.se = map(riclpm.fit, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.low = map(riclpm.fit, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.up = map(riclpm.fit, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm = case_when(ci.riclpm.low > phi[2,1] | ci.riclpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.dpm.1f <- m3.dpm.conv.1f %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.est = map(dpm.fit, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.se = map(dpm.fit, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.low = map(dpm.fit, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.up = map(dpm.fit, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm = case_when(ci.dpm.low > phi[2,1] | ci.dpm.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.riclpm.free.1f <- m3.riclpm.free.conv.1f %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(riclpm.free.est = map(riclpm.fit.free, ~parameterestimates(.)[35, "est"]) %>% unlist(),
+         riclpm.free.se = map(riclpm.fit.free, ~parameterestimates(.)[35, "se"]) %>% unlist(),
+         ci.riclpm.free.low = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.lower"]) %>% unlist(),
+         ci.riclpm.free.up = map(riclpm.fit.free, ~parameterestimates(.)[35, "ci.upper"]) %>% unlist(),
+         ci.include.riclpm.free = case_when(ci.riclpm.free.low > phi[2,1] | ci.riclpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+
+m3.est.dpm.free.1f <- m3.dpm.free.conv.1f %>%
+  dplyr::filter(converged==T, posdef==T, posdef2 == T, grads.check == F) %>%
+  mutate(dpm.free.est = map(dpm.fit.free, ~parameterestimates(.)[27, "est"]) %>% unlist(),
+         dpm.free.se = map(dpm.fit.free, ~parameterestimates(.)[27, "se"]) %>% unlist(),
+         ci.dpm.free.low = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.lower"]) %>% unlist(),
+         ci.dpm.free.up = map(dpm.fit.free, ~parameterestimates(.)[27, "ci.upper"]) %>% unlist(),
+         ci.include.dpm.free = case_when(ci.dpm.free.low > phi[2,1] | ci.dpm.free.up < phi[2,1] ~ FALSE,
+                                       .default = TRUE))
+```
+
+```{r}
+#| label: biases M3_1f
+m3.biases.riclpm.1f <- m3.est.riclpm.1f %>%
+  summarise(bias.riclpm_est = mean(.$riclpm.est-phi[2,1]),
+            mcse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm_est = sqrt(sum((.$riclpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm_est = empse.riclpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm_est = sqrt(mean((.$riclpm.est-phi[2,1])^2)),
+            coverage.riclpm = mean(ci.include.riclpm))
+
+m3.biases.dpm.1f <- m3.est.dpm.1f %>%
+  summarise(bias.dpm_est = mean(.$dpm.est-phi[2,1]),
+            mcse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm_est = sqrt(sum((.$dpm.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm_est = empse.dpm_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm_est = sqrt(mean((.$dpm.est-phi[2,1])^2)),
+            coverage.dpm = mean(ci.include.dpm))
+
+m3.biases.riclpm.free.1f <- m3.est.riclpm.free.1f %>%
+  summarise(bias.riclpm.free_est = mean(.$riclpm.free.est-phi[2,1]),
+            mcse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.riclpm.free_est = sqrt(sum((.$riclpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.riclpm.free_est = empse.riclpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.riclpm.free_est = sqrt(mean((.$riclpm.free.est-phi[2,1])^2)),
+            coverage.riclpm.free = mean(ci.include.riclpm.free))
+
+m3.biases.dpm.free.1f <- m3.est.dpm.free.1f %>%
+  summarise(bias.dpm.free_est = mean(.$dpm.free.est-phi[2,1]),
+            mcse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)*(nrow(.)-1))),
+            empse.dpm.free_est = sqrt(sum((.$dpm.free.est-phi[2,1])^2)/(nrow(.)-1)),
+            mcsese.dpm.free_est = empse.dpm.free_est/sqrt(2*(nrow(.)-1)),
+            rmse.dpm.free_est = sqrt(mean((.$dpm.free.est-phi[2,1])^2)),
+            coverage.dpm.free = mean(ci.include.dpm.free))
+```
+
+```{r}
+#| label: bias table M3_1f
+m3.1f_biases <- tibble(val = c("bias", "mcse", "rmse", "coverage"),
+                    riclpm = c(m3.biases.riclpm.1f$bias.riclpm_est,m3.biases.riclpm.1f$mcse.riclpm_est, m3.biases.riclpm.1f$rmse.riclpm_est, m3.biases.riclpm.1f$coverage.riclpm),
+                    dpm = c(m3.biases.dpm.1f$bias.dpm_est,m3.biases.dpm.1f$mcse.dpm_est, m3.biases.dpm.1f$rmse.dpm_est, m3.biases.dpm.1f$coverage.dpm),
+                    riclpm.free = c(m3.biases.riclpm.free.1f$bias.riclpm.free_est,m3.biases.riclpm.free.1f$mcse.riclpm.free_est, m3.biases.riclpm.free.1f$rmse.riclpm.free_est, m3.biases.riclpm.free.1f$coverage.riclpm.free),
+                    dpm.free = c(m3.biases.dpm.free.1f$bias.dpm.free_est,m3.biases.dpm.free.1f$mcse.dpm.free_est, m3.biases.dpm.free.1f$rmse.dpm.free_est, m3.biases.dpm.free.1f$coverage.dpm.free)) %>%
+  pivot_longer(cols=-1) %>%
+  pivot_wider(names_from = "val", values_from = "value")
+```
 
 # Results
-*Maybe do model 1, result 1, model 2, result 2, model 3, result 3 instead (instead of Models, Results)*
 
-# Models
+The discussion of results focuses on the $x_4 \rightarrow y_5$ effect
+($\phi_{xy} = 0.1$). For all models, for each scenario, the bias,
+Monte-Carlo error, root mean squared error (RMSE), and coverage were
+computed, based on recommendations by @morris2019. The bias was computed
+as the difference between the mean of the empirical sampling
+distribution, that is, the distribution of our estimates, and the true
+effect. The Monte-Carlo error was computed as the standard error of this
+estimate, and the RMSE was computed as the root of the mean squared deviation from the
+true value. Setting $\alpha = 0.5$, the coverage is the proportion
+of times that the 95% confidence interval contains the true value. The
+coverage is typically seen as acceptable when it is close to 95%.
 
-::: {#fig-models layout-ncol=2}
+Upon initial inspection of the models, we found that for scenario 3, a
+high number of models resulted in a non positive-definite matrix
+of the latent variables. Specifically, the random intercepts or
+accumulating factors had a correlation higher than 1 in all of the
+RI-CLPM models and in most of the DPM models (91.9% and 55.8% for the
+DPM without and with free loadings, respectively). Therefore, for
+subsequent results, the models were rerun, with correlations
+between random intercepts or accumulating factors set to 1. It should be
+kept in mind, however, that this constitutes an exploratory approach as
+it was not based on theory. Therefore, results may not generalize well
+to other situations.
 
-![Dynamic Panel Model](dpm.tex){height=100%}
+@tbl-measures shows the relative bias, RMSE, and coverage for the
+$x_4 \rightarrow y_5$ effect for each model, in each scenario, and
+@fig-biases visualizes the biases, with their corresponding Monte-Carlo errors. @tbl-measures and @fig-biases show that under scenario 1,
+as expected, both the RI-CLPM and the DPM yield unbiased estimates.
+Surprisingly, freeing the factor loadings results in bias.
+Specifically, they yield a negative bias, indicating that the effect is
+underestimated. Furthermore, the DPM has a lower RMSE than the RI-CLPM,
+indicating that under this scenario, the DPM shows less average
+absolute deviation from the true effect and thus may be a better choice. All
+coverages are relatively acceptable.
 
-![RI-CLPM](riclpm.tex){height=100%}
+Under scenario 2, where the effects of $C_1$ are time-varying, both the
+RI-CLPM and the DPM yield biased estimates. Specifically, the RI-CLPM
+shows a relatively extreme underestimation of the true effect, and the
+DPM yields a small overestimation. Furthermore, freeing the loadings does not capture the time-varying effects of the
+confounders, as indicated by the extreme relative biases. The DPM has
+the lowest RMSE of all models. The RI-CLPM shows very low coverage, and
+the RI-CLPM with free loadings has coverage that may be too high.
 
-Models
+Under scenario 3, where both confounders have time-varying effects, all
+models show large bias. In this situation, the RI-CLPM and DPM with free
+factor loadings have lower bias than their counterparts with fixed
+loadings. Furthermore, RI-CLPM and the DPM have very low coverages,
+and the versions with free factor loadings have coverages that may
+be too high. The DPM yields the lowest RMSE.
+
+```{r}
+#| label: fig-biasesold
+#| fig-cap: "Biases for Scenario 1 and Scenario 2. The dots indicate the bias of the models and the error bars indicate the Monte Carlo Error. The True Effect is 0.1"
+#| fig-subcap:
+#| - "Scenario 1: Time-Stable Effects"
+#| - "Scenario 2: Time-Varying Effects for C1, Time-Stable Effects for C2"
+#| - "Scenario 3: Time-Varying Effects for Both Confounders"
+#| layout-nrow: 3
+#| include: false
+m1_biases %>%
+  mutate(model = fct_relevel(name, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_point(size=2) +
+  geom_errorbar(aes(xmin = bias-mcse, xmax = bias+mcse), width=0.2) +
+  scale_x_continuous(limits = c(-0.05,0.05)) +
+  scale_y_discrete(limits=rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_apa()
+m2_biases %>%
+  mutate(model = fct_relevel(name, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_point(size=2) +
+  geom_errorbar(aes(xmin = bias-mcse, xmax = bias+mcse), width=0.2) +
+  scale_x_continuous(limits = c(-0.1,0.1)) +
+  scale_y_discrete(limits=rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_apa()
+m3.1f_biases %>%
+  mutate(model = fct_relevel(name, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_point(size=2) +
+  geom_errorbar(aes(xmin = bias-mcse, xmax = bias+mcse), width=0.2) +
+  scale_x_continuous(limits = c(-0.1,0.1)) +
+  scale_y_discrete(limits=rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_apa()
+```
+
+:::: {#fig-biases}
+
+```{r}
+#| label: plot-bias
+#| include: true
+#| fig.height: 5
+rbind(m1_biases, m2_biases, m3.1f_biases) %>%
+  mutate(Model = fct_relevel(name, c("riclpm", "dpm", "riclpm.free", "dpm.free")),
+         Scenario = c(rep("Scenario 1", 4), rep("Scenario 2", 4), rep("Scenario 3", 4))) %>%
+  ggplot(aes(x = bias, y = Model)) +
+  geom_point(size=1) +
+  geom_errorbar(aes(xmin = bias-mcse, xmax = bias+mcse), width=0.2) +
+  scale_x_continuous(limits = c(-0.1,0.1),
+                     name = "Absolute Bias",
+                     sec.axis = sec_axis(trans = ~./0.1,
+                                         name = "Relative Bias")) +
+  scale_y_discrete(limits=rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  facet_wrap(~Scenario, ncol = 1) +
+  theme_classic()
+```
+::: {.flushleft data-latex=""}
+
+*Note.* The true effect is equal to $\phi_{yx} = 0.1$. The Dots indicate the (relative) bias of each model's estimates. The error bars indicate the Monte-Carlo error.
 
 :::
 
+Biases for the Effect of $x_4$ on $y_5$
+
+::::
+
+```{r}
+#| label: keep estiomates M3_1f
+m3.ests.1f <- tibble(
+  model = c(rep("riclpm", nrow(m3.est.riclpm.1f)), rep("dpm", nrow(m3.est.dpm.1f)), rep("riclpm.free", nrow(m3.est.riclpm.free.1f)), rep("dpm.free", nrow(m3.est.dpm.free.1f))),
+  bias = c(m3.est.riclpm.1f$riclpm.est-phi[2,1], m3.est.dpm.1f$dpm.est-phi[2,1], m3.est.riclpm.free.1f$riclpm.free.est-phi[2,1], m3.est.dpm.free.1f$dpm.free.est-phi[2,1])
+)
+```
+
+```{r}
+#| label: plot estimates M3_1f
+#| include: false
+m3.ests.1f %>%
+  mutate(model = fct_relevel(model, c("riclpm", "dpm", "riclpm.free", "dpm.free"))) %>%
+  ggplot(aes(x = bias, y = model)) +
+  geom_density_ridges(aes(fill=model),
+                      quantile_lines = T,
+                      quantile_fun = median) +
+  scale_y_discrete(limits = rev,
+                   labels = c("DPM with Free Loadings",
+                              "RI-CLPM with Free Loadings",
+                              "DPM",
+                              "RI-CLPM")) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  theme_classic()
+```
+
+\renewcommand{\arraystretch}{0.7}
+
+```{r}
+#| label: tbl-measures
+#| tbl-cap: "Relative Bias, RMSE, and Covarage for Each Scenario on the Effect of $x_4$ on $y_5$. The True Effect is 0.1"
+#| include: true
+rbind(m1_biases, m2_biases, m3.1f_biases) %>%
+  mutate(Model = fct_relevel(name, c("riclpm", "dpm", "riclpm.free", "dpm.free")),
+         Model = factor(Model, levels = c("riclpm", "dpm", "riclpm.free", "dpm.free"),
+                        labels = c("RI-CLPM", "DPM", "RI-CLPM (free loadings)", "DPM (free loadings)")),
+         Scenario = c(rep("1", 4), rep("2", 4), rep("3", 4)),
+         rel_bias = bias/0.1*100,
+         cover_perc = coverage*100) %>%
+  dplyr::select(Scenario, Model, rel_bias, rmse, cover_perc) %>%
+  kable(booktabs = T, align = c("l", "l", "c", "c", "c"), digits = 2,
+      col.names = c("Scenario", "Model", "Relative Bias (\\%)", paste0("RMSE", footnote_marker_number(1, "latex")), paste0("Coverage (\\%)", footnote_marker_number(2, "latex"))), escape = F, linesep = "") %>%
+  collapse_rows(columns=1, latex_hline="major", valign="middle") %>%
+  footnote(number = c("Root Mean Square Error.", "Inclusion frequency of the true effect for the 95% confidence interval."))
+```
+
 # Discussion
+
+Previous research has suggested that when lagged effects and the effects
+of unobserved time-invariant confounders are stable over time, both the
+RI-CLPM and the DPM yield unbiased estimates of the true cross-lagged
+effect, even when the confounders are unobserved [e.g. @usami2019]. This
+characteristic of both models was replicated by the discussed
+simulations in scenario 1. However, the extent to which this is a
+reasonable causal model is debatable. For many phenomena, it may be more
+realistic to assume effects of confounders to vary over time.
+
+Therefore, we also considered situations where effects of one or two
+confounders changed over time. In our simulations, the RI-CLPM and the
+DPM respectively underestimated and overestimated the cross-lagged effects when this was the case.
+Furthermore, freeing the factor loadings in both models did not fully
+capture the time-varying nature as negative bias was observed in these
+models as well. However, because only few scenarios were considered, we cannot yet conclude that these models generally underestimate
+cross-lagged effects when confounders are unobserved; other data
+generating mechanisms may show different patterns. Furthermore, although
+bias in the estimates was present in these scenarios, conclusions on the
+direction of the effect generally did not change, as the estimated
+effects were still positive.
+
+The analyses performed in our simulation were used on simulated data
+with unobserved confounders. When confounders are measured, however, it
+may be more appropriate to model them explicitly. This can be done by
+including them in the model as covariates [@mulder2021], but methods
+specifically designed for causal inference may be more fitting
+[@schafer2008a; @leite2019], especially when many confounders are
+involved or when effects are nonlinear. In reality, however, only a
+subset of confounders are likely observed, while others remain
+unobserved. In such situations, it could be advantageous to use a combination
+of methods, such as using the RI-CLPM or DPM to correct for some
+unobserved confounders, and use propensity score based causal
+inference methods to correct for observed confounders. However, the
+extent to which this is possible and sensible is yet to be explored.
+
+We should therefore investigate whether the toolbox of social
+science researchers can be expanded by integrating causal inference
+methods with cross-lagged panel models, which will be covered by the
+thesis. The presented results highlight the necessity of such research
+and emphasize the importance of acting with caution when attempting to
+assess cause and effect.
 
 {{< pagebreak >}}
 
